@@ -12,7 +12,8 @@ from streamlit_option_menu import option_menu
 # navigasi sidebar
 with st.sidebar :
     selected = option_menu ('Dashboard',
-                            ['Jumlah Penduduk (2020-2025)', 
+                            ['Home',
+                             'Jumlah Penduduk (2020-2025)', 
                              'Jumlah Penduduk (Pendidikan)',
                              'Jenis Pekerjaan Dominan',
                              'Jenis Tanah',
@@ -24,7 +25,7 @@ with st.sidebar :
                              'Sarana dan Prasarana',
                              'Sarana Kebersihan',
                              'Tenaga Kerja'], icons=[
-                               'graph-up', 'mortarboard', 'person-workspace', 'map', 'building',
+                               'house', 'graph-up', 'mortarboard', 'person-workspace', 'map', 'building',
                                'people', 'person-badge', 'universal-access', 'gender-ambiguous',
                                'hospital', 'trash', 'briefcase'
                            ], # Anda bisa menyesuaikan ikon dari Bootstrap Icons
