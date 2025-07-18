@@ -9,6 +9,15 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 
+#Input CSS
+def load_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+        
+  #Panggil CSS
+load_css("main.css")
+#Input HTML
+
 # navigasi sidebar
 with st.sidebar :
     selected = option_menu ('Dashboard',

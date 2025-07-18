@@ -1,0 +1,23 @@
+[data-testid="stAppViewContainer"] {
+    background-color: #144385; 
+}
+[data-testid="stHeader"] {
+  background-color: #144385; 
+}
+
+[data-testid="stIconMaterial"] {
+  background-color: #ffffff; 
+}
+
+[data-testid="stBaseButton-header"] span {
+  color: #ffffff; 
+}
+
+[data-testid="stMainMenu"] span {
+  color: #ffffff; 
+}
+
+[data-testid="stAppViewContainer"] h1 {
+  color: rgb(255, 255, 255);
+}
+
