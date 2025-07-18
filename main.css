@@ -5,9 +5,7 @@
   background-color: #144385; 
 }
 
-[data-testid="stIconMaterial"] {
-  background-color: #ffffff; 
-}
+
 
 [data-testid="stBaseButton-header"] span {
   color: #ffffff; 
