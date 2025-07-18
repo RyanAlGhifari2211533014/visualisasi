@@ -26,6 +26,14 @@ from pages import home
 from pages import jumlah_penduduk_2020_2025
 from pages import jumlah_penduduk_pendidikan
 
+# --- Streamlit Page Configuration ---
+st.set_page_config(
+    page_title="Dashboard Data Kelurahan",
+    page_icon="📊",
+    layout="wide", # Use wide layout for better visualization
+    initial_sidebar_state="expanded"
+)
+
 # Import other pages as you create them:
 # from pages import jenis_tanah
 # from pages import jumlah_industri_umkm
@@ -43,13 +51,6 @@ def load_css(file_name):
 # Call CSS
 load_css("main.css")
 
-# --- Streamlit Page Configuration ---
-st.set_page_config(
-    page_title="Dashboard Data Kelurahan",
-    page_icon="📊",
-    layout="wide", # Use wide layout for better visualization
-    initial_sidebar_state="expanded"
-)
 
 # --- Initialize Session State for other data (if not loaded from specific files) ---
 # This acts as a temporary "database" for data not yet sourced from persistent files/DB.
