@@ -18,11 +18,14 @@ import pandas as pd # Still needed for initial session_state setup if any
 import datetime # Still needed for initial session_state setup if any
 
 # Import data loading functions
-from data_loader import load_penduduk_data_from_excel, load_data_pendidikan
+# BENAR:
+from data_loader import load_penduduk_data_from_excel, load_pendidikan_data_from_excel
 
 # Import page modules
 from pages import home
 from pages import jumlah_penduduk_2020_2025
+from pages import jumlah_penduduk_pendidikan
+
 # Import other pages as you create them:
 # from pages import jenis_tanah
 # from pages import jumlah_industri_umkm
@@ -76,12 +79,12 @@ with st.sidebar:
             'Penduduk Menurut Jenis Kelamin',
             'Sarana dan Prasarana',
             'Sarana Kebersihan',
-            'Tenaga Kerja'
+            'Tenaga Kerja','Admin'
         ],
         icons=[
             'house', 'graph-up', 'mortarboard', 'person-workspace', 'map', 'building',
             'people', 'person-badge', 'universal-access', 'gender-ambiguous',
-            'hospital', 'trash', 'briefcase'
+            'hospital', 'trash', 'briefcase','admin'
         ],
         menu_icon="cast",
         default_index=0

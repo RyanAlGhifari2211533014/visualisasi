@@ -1,67 +1,123 @@
+# File: pages/jumlah_penduduk_2020_2025.py
+
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import datetime
+import io
+from fpdf import FPDF
 
-# Import data loading and saving functions from data_loader
-from data_loader import load_penduduk_data_from_excel, save_data_penduduk_tahun_to_session
+# Import data loading functions from data_loader
+from data_loader import load_penduduk_data_from_excel
+
+# --- Fungsi Konversi untuk Download ---
+
+def to_excel(df: pd.DataFrame):
+    """
+    Mengonversi DataFrame Pandas menjadi file Excel di dalam memori.
+    """
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Data Penduduk')
+    processed_data = output.getvalue()
+    return processed_data
+
+def df_to_pdf(df: pd.DataFrame):
+    """
+    Mengonversi DataFrame Pandas menjadi file PDF.
+    """
+    pdf = FPDF(orientation="L", unit="mm", format="A4")
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 10)
+    
+    effective_page_width = pdf.w - 2 * pdf.l_margin
+    col_width = effective_page_width / len(df.columns)
+
+    for col_header in df.columns:
+        pdf.cell(col_width, 10, col_header, border=1, align='C')
+    pdf.ln()
+
+    pdf.set_font("Arial", "", 8)
+    for index, row in df.iterrows():
+        for item in row:
+            pdf.cell(col_width, 10, str(item), border=1, align='C')
+        pdf.ln()
+    
+    # --- PERBAIKAN DI SINI ---
+    # Konversi output 'bytearray' dari FPDF menjadi 'bytes' yang diterima oleh Streamlit.
+    return bytes(pdf.output())
+
+
+# --- Fungsi utama untuk menjalankan halaman ---
 
 def run():
     """
-    Renders the 'Jumlah Penduduk (2020-2025)' page, including chart, table, and data input form.
+    Merender halaman 'Jumlah Penduduk (2020-2025)', termasuk grafik, tabel, dan tombol download.
     """
     st.title('📊 Jumlah Penduduk (2020-2025)')
 
-    # Muat data dari file Excel (data awal)
-    # Coba ambil dari session_state terlebih dahulu jika sudah dimodifikasi oleh form
-    # Jika tidak ada di session_state, baru muat dari Excel
-    if f'cached_{load_penduduk_data_from_excel.__name__}' in st.session_state:
-        df_penduduk_tahun = st.session_state[f'cached_{load_penduduk_data_from_excel.__name__}']
-    else:
-        df_penduduk_tahun = load_penduduk_data_from_excel()
-        # Simpan ke session_state agar konsisten jika ada modifikasi
-        st.session_state[f'cached_{load_penduduk_data_from_excel.__name__}'] = df_penduduk_tahun
+    # Muat data dari file Excel
+    df_penduduk_tahun = load_penduduk_data_from_excel()
 
-
-    # Tampilkan Visualisasi Data Penduduk
-    st.subheader("Grafik Tren Jumlah Penduduk Tahunan")
-    # Pastikan DataFrame tidak kosong dan kolom yang dibutuhkan ada
+    # Pastikan DataFrame tidak kosong sebelum melanjutkan
     if not df_penduduk_tahun.empty and 'Tahun' in df_penduduk_tahun.columns and 'Jumlah Total (orang)' in df_penduduk_tahun.columns:
-        # Membuat figure matplotlib
+        
+        # --- Tampilkan Visualisasi Data Penduduk ---
+        st.subheader("Grafik Tren Jumlah Penduduk Tahunan")
         fig, ax = plt.subplots(figsize=(12, 7))
         sns.set(style="whitegrid")
 
-        # Membuat line plot menggunakan seaborn
         sns.lineplot(
             x='Tahun',
             y='Jumlah Total (orang)',
             data=df_penduduk_tahun,
-            marker='o', # Menambahkan penanda titik untuk setiap tahun
+            marker='o',
             linewidth=2.5,
-            ax=ax # Menentukan axis untuk plot
+            ax=ax
         )
 
-        # Menambahkan judul dan label yang jelas
         ax.set_title('Tren Jumlah Penduduk Total (2020 - 2025)', fontsize=16, pad=20)
         ax.set_xlabel('Tahun', fontsize=12)
         ax.set_ylabel('Jumlah Penduduk (Orang)', fontsize=12)
-
-        # Mengatur agar sumbu X hanya menampilkan angka bulat (tahun)
         ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
-        plt.xticks(rotation=45) # Memutar label tahun agar tidak tumpang tindih
+        plt.xticks(rotation=45)
 
-        # Menambahkan label angka di setiap titik data
         for index, row in df_penduduk_tahun.iterrows():
-            ax.text(row['Tahun'], row['Jumlah Total (orang)'] + (df_penduduk_tahun['Jumlah Total (orang)'].max() * 0.01), # Posisi teks sedikit di atas titik
-                    f"{int(row['Jumlah Total (orang)'])}", # Format sebagai integer
-                    ha='center', va='bottom', fontsize=10) # va='bottom' untuk posisi vertikal
+            ax.text(row['Tahun'], row['Jumlah Total (orang)'] + (df_penduduk_tahun['Jumlah Total (orang)'].max() * 0.01),
+                    f"{int(row['Jumlah Total (orang)'])}",
+                    ha='center', va='bottom', fontsize=10)
 
-        plt.tight_layout() # Merapikan layout
-        st.pyplot(fig) # Menampilkan plot di Streamlit
+        plt.tight_layout()
+        st.pyplot(fig)
 
+        # --- Tampilkan Tabel Data ---
         st.subheader("Tabel Data Penduduk")
         st.dataframe(df_penduduk_tahun, use_container_width=True)
+        st.markdown("---") # Garis pemisah
+
+        # --- Siapkan Data dan Tombol Download ---
+        df_excel = to_excel(df_penduduk_tahun)
+        pdf_data = df_to_pdf(df_penduduk_tahun)
+
+        col1, col2 = st.columns(2)
+        # Download Dengan XLSX
+        with col1:
+            st.download_button(
+                label="Download as XLSX",
+                data=df_excel,
+                file_name="data_penduduk.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True
+            )
+        #Download Dengan PDF
+        with col2:
+            st.download_button(
+                label="Download as PDF",
+                data=pdf_data,
+                file_name="data_penduduk.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
     else:
         st.info("Belum ada data jumlah penduduk yang valid untuk divisualisasikan. Pastikan file Excel ada dan memiliki kolom 'Tahun' serta 'Jumlah Total (orang)' dengan data yang benar.")
 
