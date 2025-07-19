@@ -8,7 +8,8 @@ import io
 from fpdf import FPDF
 
 # Impor fungsi pemuat data yang sudah diperbarui dari data_loader
-from data_loader import load_pendidikan_data_from_excel
+#from data_loader import load_pendidikan_data_from_excel
+from data_loader import load_pendidikan_data_from_gsheet
 
 # --- Fungsi Konversi untuk Download ---
 
@@ -59,7 +60,7 @@ def run():
     st.title("🎓 Jumlah Penduduk Berdasarkan Tingkat Pendidikan")
 
     # Muat data dari file Excel menggunakan fungsi baru
-    df_pendidikan = load_pendidikan_data_from_excel()
+    df_pendidikan = load_pendidikan_data_from_gsheet()
 
     if not df_pendidikan.empty:
         # --- Tampilkan Visualisasi ---
