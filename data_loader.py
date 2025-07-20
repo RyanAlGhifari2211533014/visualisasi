@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 from streamlit_gsheets import GSheetsConnection
 
-# URL Google Sheets — Harus disesuaikan dengan isi file .streamlit/secrets.toml
-GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1NC-XuHgZ6adaTzL7XI55MnxNGCSwtGy9p8eXnF_xhzs"
+# ✅ Mengambil URL spreadsheet dari secrets.toml
+GOOGLE_SHEET_URL = st.secrets["gsheets"]["spreadsheet"]
 
 # --- FUNGSI: Memuat Data Jumlah Penduduk dari Google Sheet ---
 @st.cache_data
