@@ -6,7 +6,16 @@
 # === PASTIKAN LIBRARY TERINSTAL ===
 # Pastikan semua library ini terinstal di lingkungan Python Anda.
 # Anda bisa menginstalnya dengan:
-# pip install streamlit streamlit-option-menu pandas altair matplotlib seaborn openpyxl fpdf2 streamlit_gsheets
+# pip install streamlit
+# pip install streamlit-option-menu
+# pip install pandas
+# pip install altair
+# pip install matplotlib
+# pip install seaborn
+# pip install openpyxl
+# pip install fpdf2
+# pip install streamlit_gsheets
+# pip install XlsxWriter
 
 # === IMPORT LIBRARY UTAMA ===
 import streamlit as st
