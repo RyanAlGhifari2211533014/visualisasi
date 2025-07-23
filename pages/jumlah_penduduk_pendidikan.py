@@ -2,14 +2,18 @@
 
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+# Hapus matplotlib.pyplot dan seaborn karena akan menggunakan Altair
+# import matplotlib.pyplot as plt
+# import seaborn as sns
+import altair as alt # Impor Altair
 import io
-from fpdf import FPDF
+from fpdf import FPDF # Pastikan 'fpdf2' terinstal.
 
 # Impor fungsi pemuat data yang sudah diperbarui dari data_loader
-#from data_loader import load_pendidikan_data_from_excel
 from data_loader import load_pendidikan_data_from_gsheet
+
+# Nonaktifkan batas baris Altair agar bisa memproses data besar
+alt.data_transformers.disable_max_rows()
 
 # --- Fungsi Konversi untuk Download ---
 
@@ -34,21 +38,65 @@ def df_to_pdf(df: pd.DataFrame):
     pdf.cell(0, 10, 'Data Penduduk Berdasarkan Tingkat Pendidikan', 0, 1, 'C')
     pdf.ln(10)
 
+    # Perbaikan: Tambahkan kolom 'No' ke DataFrame untuk PDF jika belum ada
+    df_for_pdf = df.copy()
+    if 'No' not in df_for_pdf.columns: 
+        df_for_pdf.insert(0, 'No', range(1, 1 + len(df_for_pdf))) 
+
     pdf.set_font("Arial", "B", 10)
     effective_page_width = pdf.w - 2 * pdf.l_margin
-    col_width = effective_page_width / len(df.columns)
+    
+    # Sesuaikan lebar kolom untuk PDF
+    col_widths = {
+        'No': 15,
+        'Pendidikan': 90, # Lebar lebih besar untuk tingkat pendidikan
+        'Jumlah': 30
+    }
+    
+    headers = df_for_pdf.columns.tolist()
+    # Hitung lebar default untuk kolom yang tidak didefinisikan secara eksplisit
+    remaining_width = effective_page_width - sum(col_widths.get(h, 0) for h in headers)
+    remaining_cols = len(headers) - sum(1 for h in headers if h in col_widths)
+    default_col_width = remaining_width / remaining_cols if remaining_cols > 0 else 30
+    
+    if default_col_width < 10: default_col_width = 10
 
-    for col_header in df.columns:
-        pdf.cell(col_width, 10, col_header, border=1, align='C')
-    pdf.ln()
+    # Cetak header
+    y_start_headers = pdf.get_y()
+    x_current = pdf.get_x()
+    max_y_after_headers = y_start_headers
+
+    for i, header in enumerate(headers):
+        current_col_width = col_widths.get(header, default_col_width)
+        pdf.set_xy(x_current, y_start_headers)
+        pdf.multi_cell(current_col_width, 5, str(header).encode('latin-1', 'replace').decode('latin-1'), border=1, align='C')
+        x_current += current_col_width
+        max_y_after_headers = max(max_y_after_headers, pdf.get_y())
+    
+    pdf.set_y(max_y_after_headers) 
 
     pdf.set_font("Arial", "", 9)
-    for index, row in df.iterrows():
-        for item in row:
-            # Mengonversi semua item menjadi string untuk dicetak di PDF
-            pdf.cell(col_width, 10, str(item), border=1, align='C')
-        pdf.ln()
+    for index, row in df_for_pdf.iterrows():
+        for i, item in enumerate(row):
+            header = headers[i]
+            current_col_width = col_widths.get(header, default_col_width)
+            
+            # Menghilangkan ".0" untuk nilai numerik
+            formatted_item = str(item)
+            if isinstance(item, (int, float)):
+                if float(item).is_integer():
+                    formatted_item = str(int(item))
+                else:
+                    formatted_item = str(item)
+            
+            pdf.cell(current_col_width, 10, formatted_item.encode('latin-1', 'replace').decode('latin-1'), border=1, ln=False)
+        pdf.ln(10) # Pindah ke baris baru setelah setiap baris data
     
+    # Tambahkan teks sumber di bagian bawah tabel
+    pdf.set_y(pdf.get_y() + 5) # Tambahkan 5mm spasi setelah tabel
+    pdf.set_font("Arial", size=8) # Ukuran font lebih kecil untuk sumber
+    pdf.cell(0, 10, "Sumber: Kelurahan Kubu Marapalam", align='C')
+
     return bytes(pdf.output())
 
 # --- Fungsi utama untuk menjalankan halaman ---
@@ -59,35 +107,52 @@ def run():
     """
     st.title("🎓 Jumlah Penduduk Berdasarkan Tingkat Pendidikan")
 
-    # Muat data dari file Excel menggunakan fungsi baru
+    # Muat data dari Google Sheets
     df_pendidikan = load_pendidikan_data_from_gsheet()
 
     if not df_pendidikan.empty:
-        # --- Tampilkan Visualisasi ---
-        st.subheader("Grafik Distribusi Pendidikan")
-        
-        # Membuat grafik batang horizontal dengan Matplotlib dan Seaborn
-        fig, ax = plt.subplots(figsize=(10, 6))
-        sns.set_style("whitegrid")
-        
-        # Menggunakan barplot dari Seaborn
-        sns.barplot(x='Jumlah', y='Tingkat Pendidikan', data=df_pendidikan, ax=ax, orient='h', palette='viridis')
-        
-        ax.set_xlabel('Jumlah Orang', fontsize=12)
-        ax.set_ylabel('Tingkat Pendidikan', fontsize=12)
-        ax.set_title('Distribusi Penduduk Berdasarkan Pendidikan', fontsize=14, pad=20)
-        
-        # Menambahkan label angka di ujung setiap bar
-        for index, value in enumerate(df_pendidikan['Jumlah']):
-            ax.text(value, index, f' {value}', va='center', fontsize=10)
-            
-        plt.tight_layout()
-        st.pyplot(fig)
 
         # --- Tampilkan Tabel Data ---
         st.subheader("Tabel Rincian Data Pendidikan")
         st.dataframe(df_pendidikan, use_container_width=True)
         st.markdown("---")
+
+        # --- Tampilkan Visualisasi dengan Altair ---
+        st.subheader("Grafik Distribusi Pendidikan")
+        
+        # Pastikan kolom yang dibutuhkan ada untuk grafik
+        if 'Pendidikan' in df_pendidikan.columns and 'Jumlah' in df_pendidikan.columns:
+            # Membuat bar chart horizontal dengan Altair
+            chart = alt.Chart(df_pendidikan).mark_bar(
+                cornerRadiusEnd=4 # Sudut bar lebih lembut di ujung
+            ).encode(
+                x=alt.X('Jumlah:Q', title='Jumlah Orang'),
+                y=alt.Y('Pendidikan:N', sort='-x', title='Tingkat Pendidikan'), # Sortir berdasarkan Jumlah secara menurun
+                color=alt.Color('Pendidikan:N', legend=None), # Warna berdasarkan Pendidikan, tanpa legenda
+                tooltip=[
+                    alt.Tooltip('Pendidikan:N', title='Tingkat Pendidikan'),
+                    alt.Tooltip('Jumlah:Q', title='Jumlah')
+                ]
+            ).properties(
+                title='Distribusi Penduduk Berdasarkan Pendidikan'
+            )
+
+            # Menambahkan label angka di ujung setiap bar
+            text = chart.mark_text(
+                align='left',
+                baseline='middle',
+                dx=3 # Jarak label dari batang
+            ).encode(
+                x='Jumlah:Q',
+                y=alt.Y('Pendidikan:N', sort='-x'),
+                text=alt.Text('Jumlah:Q', format='.0f') # Format angka tanpa desimal
+            )
+
+            final_chart = chart + text # Gabungkan bar chart dan label
+            st.altair_chart(final_chart, use_container_width=True)
+
+        else:
+            st.warning("Kolom 'Pendidikan' atau 'Jumlah' tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
 
         # --- Siapkan Data dan Tombol Download ---
         df_excel = to_excel(df_pendidikan)
@@ -97,7 +162,7 @@ def run():
 
         with col1:
             st.download_button(
-                label="📥 Download as XLSX",
+                label="Download as XLSX",
                 data=df_excel,
                 file_name="data_pendidikan.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -106,12 +171,11 @@ def run():
         
         with col2:
             st.download_button(
-                label="📄 Download as PDF",
+                label="Download as PDF",
                 data=pdf_data,
                 file_name="data_pendidikan.pdf",
                 mime="application/pdf",
                 use_container_width=True
             )
     else:
-        st.warning("Data pendidikan tidak dapat dimuat. Pastikan file 'Jumlah Penduduk (Pendidikan).xlsx' ada dan formatnya benar.")
-
+        st.info("Belum ada data pendidikan yang valid untuk divisualisasikan. Pastikan Google Sheet Anda dapat diakses dan memiliki data yang benar di worksheet 'Jumlah Penduduk (Pendidikan)' dengan kolom 'No', 'Pendidikan', dan 'Jumlah'.")

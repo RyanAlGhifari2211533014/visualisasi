@@ -51,10 +51,10 @@ from pages import home
 from pages import jumlah_penduduk_2020_2025
 from pages import jumlah_penduduk_pendidikan
 # Tambahkan import untuk halaman lain di sini saat Anda membuatnya
-# from pages import jenis_pekerjaan_dominan
-# from pages import jenis_tanah
-# from pages import jumlah_industri_umkm
-# from pages import jumlah_kk_menurut_rw
+from pages import jenis_pekerjaan_dominan
+from pages import jenis_tanah
+from pages import jumlah_industri_umkm
+from pages import jumlah_kk_menurut_rw
 # from pages import jumlah_penduduk_status_pekerja
 # from pages import penduduk_disabilitas
 # from pages import penduduk_menurut_jenis_kelamin
@@ -63,11 +63,10 @@ from pages import jumlah_penduduk_pendidikan
 # from pages import tenaga_kerja
 # from pages import admin
 
-
 # === SIDEBAR NAVIGASI ===
 # Blok 'with st.sidebar:' menempatkan semua elemen di dalamnya ke dalam sidebar Streamlit.
 with st.sidebar:
-    st.title("Dashboard Data Kelurahan") # Judul di sidebar
+    st.title("SIGEMA") # Judul di sidebar
 
     # Membuat menu opsi navigasi menggunakan streamlit-option_menu
     selected = option_menu(
@@ -86,6 +85,7 @@ with st.sidebar:
             'Sarana dan Prasarana', # Placeholder, perlu dibuat halamannya
             'Sarana Kebersihan', # Placeholder, perlu dibuat halamannya
             'Tenaga Kerja', # Placeholder, perlu dibuat halamannya
+            'Peta',
             'Admin' # Placeholder, perlu dibuat halamannya
         ],
         icons=[ # Ikon untuk setiap opsi menu (sesuaikan dengan ikon Bootstrap yang tersedia)
@@ -105,16 +105,14 @@ elif selected == 'Jumlah Penduduk (2020-2025)':
     jumlah_penduduk_2020_2025.run() # Memanggil fungsi run() dari modul jumlah_penduduk_2020_2025
 elif selected == 'Jumlah Penduduk (Pendidikan)':
     jumlah_penduduk_pendidikan.run() # Memanggil fungsi run() dari modul jumlah_penduduk_pendidikan
-# Tambahkan logika untuk halaman-halaman lain di sini setelah Anda membuat modulnya di folder 'pages'.
-# Contoh:
-# elif selected == 'Jenis Pekerjaan Dominan':
-#     jenis_pekerjaan_dominan.run()
-# elif selected == 'Jenis Tanah':
-#     jenis_tanah.run()
-# elif selected == 'Jumlah Industri UMKM':
-#     jumlah_industri_umkm.run()
-# elif selected == 'Jumlah KK Menurut RW':
-#     jumlah_kk_menurut_rw.run()
+elif selected == 'Jenis Pekerjaan Dominan':
+    jenis_pekerjaan_dominan.run()
+elif selected == 'Jenis Tanah':
+    jenis_tanah.run()
+elif selected == 'Jumlah Industri UMKM':
+    jumlah_industri_umkm.run()
+elif selected == 'Jumlah KK Menurut RW':
+    jumlah_kk_menurut_rw.run()
 # elif selected == 'Jumlah Penduduk (Status Pekerja)':
 #     jumlah_penduduk_status_pekerja.run()
 # elif selected == 'Penduduk Disabilitas':

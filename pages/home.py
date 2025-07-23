@@ -22,4 +22,4 @@ def run():
     # Optional: Add some general statistics or a welcoming image
     st.image("https://placehold.co/600x300/E0F2F7/2C3E50?text=Visualisasi+Data+Kelurahan", use_column_width=True)
     st.markdown("---")
-    st.write("Dibuat dengan ❤️ oleh Tim Data Kelurahan.")
+    st.write("Made by @TimCihuy")
