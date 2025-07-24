@@ -57,10 +57,10 @@ from pages import jumlah_industri_umkm
 from pages import jumlah_kk_menurut_rw
 from pages import jumlah_penduduk_status_pekerja
 from pages import penduduk_disabilitas
-# from pages import penduduk_menurut_jenis_kelamin
-# from pages import sarana_dan_prasarana
-# from pages import sarana_kebersihan
-# from pages import tenaga_kerja
+from pages import penduduk_menurut_jenis_kelamin
+from pages import sarana_dan_prasarana
+from pages import sarana_kebersihan
+from pages import tenaga_kerja
 # from pages import admin
 
 # === SIDEBAR NAVIGASI ===
@@ -90,7 +90,7 @@ with st.sidebar:
         ],
         icons=[ # Ikon untuk setiap opsi menu (sesuaikan dengan ikon Bootstrap yang tersedia)
             'house', 'graph-up', 'mortarboard', 'person-workspace', 'map', 'building',
-            'people', 'person-badge', 'universal-access', 'gender-ambiguous',
+            'people', 'person-badge', 'universal-access', 'person-fill-gear',
             'hospital', 'trash', 'briefcase', 'gear'
         ],
         menu_icon="cast", # Ikon untuk judul menu
@@ -117,13 +117,13 @@ elif selected == 'Jumlah Penduduk (Status Pekerja)':
     jumlah_penduduk_status_pekerja.run()
 elif selected == 'Penduduk Disabilitas':
     penduduk_disabilitas.run()
-# elif selected == 'Penduduk Menurut Jenis Kelamin':
-#     penduduk_menurut_jenis_kelamin.run()
-# elif selected == 'Sarana dan Prasarana':
-#     sarana_dan_prasarana.run()
-# elif selected == 'Sarana Kebersihan':
-#     sarana_kebersihan.run()
-# elif selected == 'Tenaga Kerja':
-#     tenaga_kerja.run()
+elif selected == 'Penduduk Menurut Jenis Kelamin':
+    penduduk_menurut_jenis_kelamin.run()
+elif selected == 'Sarana dan Prasarana':
+    sarana_dan_prasarana.run()
+elif selected == 'Sarana Kebersihan':
+    sarana_kebersihan.run()
+elif selected == 'Tenaga Kerja':
+    tenaga_kerja.run()
 # elif selected == 'Admin':
 #     admin.run()
