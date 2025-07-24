@@ -1,9 +1,11 @@
-# how to run:
-# 1. Open your terminal or command prompt.
-# 2. Navigate to this project folder location (e.g., cd your_project_folder).
-# 3. Run the Streamlit app: streamlit run main.py
+# === CARA MENJALANKAN ===
+# 1. Buka terminal atau CMD.
+# 2. Masuk ke folder proyek (contoh: cd D:\visualisasi)
+# 3. Jalankan perintah: streamlit run main.py
 
-# Make sure you have installed these libraries:
+# === PASTIKAN LIBRARY TERINSTAL ===
+# Pastikan semua library ini terinstal di lingkungan Python Anda.
+# Anda bisa menginstalnya dengan:
 # pip install streamlit
 # pip install streamlit-option-menu
 # pip install pandas
@@ -11,97 +13,117 @@
 # pip install matplotlib
 # pip install seaborn
 # pip install openpyxl
+# pip install fpdf2
+# pip install st-gsheets-connection
+# pip install XlsxWriter
 
+# === IMPORT LIBRARY UTAMA ===
 import streamlit as st
-from streamlit_option_menu import option_menu
-import pandas as pd # Still needed for initial session_state setup if any
-import datetime # Still needed for initial session_state setup if any
+from streamlit_option_menu import option_menu # Untuk navigasi sidebar yang interaktif
+import pandas as pd # Untuk manipulasi data
 
-# Import data loading functions
-# BENAR:
-from data_loader import load_penduduk_data_from_excel, load_pendidikan_data_from_excel
-
-# Import page modules
-from pages import home
-from pages import jumlah_penduduk_2020_2025
-from pages import jumlah_penduduk_pendidikan
-
-# --- Streamlit Page Configuration ---
+# === SETTING HALAMAN UTAMA STREAMLIT ===
 st.set_page_config(
-    page_title="Dashboard Data Kelurahan",
-    page_icon="📊",
-    layout="wide", # Use wide layout for better visualization
-    initial_sidebar_state="expanded"
+    page_title="Dashboard Data Kelurahan", # Judul yang muncul di tab browser
+    page_icon="📊", # Ikon yang muncul di tab browser
+    layout="wide",  # Membuat tampilan aplikasi lebih lebar
+    initial_sidebar_state="expanded" # Sidebar akan terbuka secara default
 )
 
-# Import other pages as you create them:
-# from pages import jenis_tanah
-# from pages import jumlah_industri_umkm
-# ...and so on for all your menu options
-
-# --- CSS Injection ---
+# === FUNGSI UNTUK MEMUAT CSS KUSTOM JIKA ADA ===
+# Fungsi ini mencoba membaca dan menerapkan file CSS eksternal untuk styling kustom.
+# Struktur dan fungsionalitas fungsi ini TIDAK BERUBAH.
 def load_css(file_name):
-    """Loads and injects CSS from a file into the Streamlit app."""
     try:
         with open(file_name) as f:
             st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
     except FileNotFoundError:
-        st.warning(f"CSS file '{file_name}' not found. Skipping CSS loading.")
+        st.warning(f"File CSS '{file_name}' tidak ditemukan. CSS tidak dimuat.")
 
-# Call CSS
+# Panggil fungsi untuk memuat CSS. Pastikan ada file 'main.css' di direktori yang sama dengan main.py
+# Pemanggilan ini dan fungsionalitasnya TIDAK BERUBAH.
 load_css("main.css")
 
+# === IMPORT FUNGSI-FUNGSI HALAMAN ===
+# Mengimpor modul-modul halaman dari folder 'pages'.
+# Setiap modul diasumsikan memiliki fungsi 'run()' yang akan dipanggil.
+from pages import home
+from pages import jumlah_penduduk_2020_2025
+from pages import jumlah_penduduk_pendidikan
+# Tambahkan import untuk halaman lain di sini saat Anda membuatnya
+from pages import jenis_pekerjaan_dominan
+from pages import jenis_tanah
+from pages import jumlah_industri_umkm
+from pages import jumlah_kk_menurut_rw
+from pages import jumlah_penduduk_status_pekerja
+from pages import penduduk_disabilitas
+from pages import penduduk_menurut_jenis_kelamin
+from pages import sarana_dan_prasarana
+from pages import sarana_kebersihan
+from pages import tenaga_kerja
+# from pages import admin
 
-# --- Initialize Session State for other data (if not loaded from specific files) ---
-# This acts as a temporary "database" for data not yet sourced from persistent files/DB.
-# IMPORTANT: For persistent data, replace these with actual database connections (e.g., Firestore).
-if 'data_pendidikan' not in st.session_state:
-    st.session_state.data_pendidikan = pd.DataFrame({
-        'Tingkat Pendidikan': ['SD', 'SMP', 'SMA', 'Diploma', 'Sarjana', 'Pascasarjana'],
-        'Jumlah': [3000, 2500, 2000, 800, 1200, 300]
-    })
-# Add other initial session state data here if needed for other pages
-
-# --- Sidebar Navigation ---
+# === SIDEBAR NAVIGASI ===
+# Blok 'with st.sidebar:' menempatkan semua elemen di dalamnya ke dalam sidebar Streamlit.
 with st.sidebar:
-    st.title("Dashboard Data Kelurahan")
+    st.title("SIGEMA") # Judul di sidebar
+
+    # Membuat menu opsi navigasi menggunakan streamlit-option_menu
     selected = option_menu(
-        menu_title='Menu Utama',
+        menu_title='Menu Utama', # Judul untuk menu ini
         options=[
             'Home',
             'Jumlah Penduduk (2020-2025)',
             'Jumlah Penduduk (Pendidikan)',
-            'Jenis Pekerjaan Dominan',
-            'Jenis Tanah',
-            'Jumlah Industri UMKM',
-            'Jumlah KK Menurut RW',
-            'Jumlah Penduduk (Status Pekerja)',
-            'Penduduk Disabilitas',
-            'Penduduk Menurut Jenis Kelamin',
-            'Sarana dan Prasarana',
-            'Sarana Kebersihan',
-            'Tenaga Kerja','Admin'
+            'Jenis Pekerjaan Dominan', # Placeholder, perlu dibuat halamannya
+            'Jenis Tanah', # Placeholder, perlu dibuat halamannya
+            'Jumlah Industri UMKM', # Placeholder, perlu dibuat halamannya
+            'Jumlah KK Menurut RW', # Placeholder, perlu dibuat halamannya
+            'Jumlah Penduduk (Status Pekerja)', # Placeholder, perlu dibuat halamannya
+            'Penduduk Disabilitas', # Placeholder, perlu dibuat halamannya
+            'Penduduk Menurut Jenis Kelamin', # Placeholder, perlu dibuat halamannya
+            'Sarana dan Prasarana', # Placeholder, perlu dibuat halamannya
+            'Sarana Kebersihan', # Placeholder, perlu dibuat halamannya
+            'Tenaga Kerja', # Placeholder, perlu dibuat halamannya
+            'Peta',
+            'Admin' # Placeholder, perlu dibuat halamannya
         ],
-        icons=[
+        icons=[ # Ikon untuk setiap opsi menu (sesuaikan dengan ikon Bootstrap yang tersedia)
             'house', 'graph-up', 'mortarboard', 'person-workspace', 'map', 'building',
-            'people', 'person-badge', 'universal-access', 'gender-ambiguous',
-            'hospital', 'trash', 'briefcase','admin'
+            'people', 'person-badge', 'universal-access', 'person-fill-gear',
+            'hospital', 'trash', 'briefcase', 'gear'
         ],
-        menu_icon="cast",
-        default_index=0
+        menu_icon="cast", # Ikon untuk judul menu
+        default_index=0 # Indeks opsi yang dipilih secara default (0 = Home)
     )
 
-# --- Page Routing ---
-# Based on the selected option, call the run() function of the corresponding page module.
+# === ROUTING KE SETIAP HALAMAN BERDASARKAN MENU YANG DIPILIH ===
+# Bagian ini menentukan halaman mana yang akan ditampilkan berdasarkan opsi yang dipilih di sidebar.
 if selected == 'Home':
-    home.run()
+    home.run() # Memanggil fungsi run() dari modul home
 elif selected == 'Jumlah Penduduk (2020-2025)':
-    jumlah_penduduk_2020_2025.run()
+    jumlah_penduduk_2020_2025.run() # Memanggil fungsi run() dari modul jumlah_penduduk_2020_2025
 elif selected == 'Jumlah Penduduk (Pendidikan)':
-    jumlah_penduduk_pendidikan.run()
+    jumlah_penduduk_pendidikan.run() # Memanggil fungsi run() dari modul jumlah_penduduk_pendidikan
 elif selected == 'Jenis Pekerjaan Dominan':
     jenis_pekerjaan_dominan.run()
-# Add elif blocks for other pages here:
-# elif selected == 'Jenis Tanah':
-#     jenis_tanah.run()
-# ... and so on
+elif selected == 'Jenis Tanah':
+    jenis_tanah.run()
+elif selected == 'Jumlah Industri UMKM':
+    jumlah_industri_umkm.run()
+elif selected == 'Jumlah KK Menurut RW':
+    jumlah_kk_menurut_rw.run()
+elif selected == 'Jumlah Penduduk (Status Pekerja)':
+    jumlah_penduduk_status_pekerja.run()
+elif selected == 'Penduduk Disabilitas':
+    penduduk_disabilitas.run()
+elif selected == 'Penduduk Menurut Jenis Kelamin':
+    penduduk_menurut_jenis_kelamin.run()
+elif selected == 'Sarana dan Prasarana':
+    sarana_dan_prasarana.run()
+elif selected == 'Sarana Kebersihan':
+    sarana_kebersihan.run()
+elif selected == 'Tenaga Kerja':
+    tenaga_kerja.run()
+# elif selected == 'Admin':
+#     admin.run()

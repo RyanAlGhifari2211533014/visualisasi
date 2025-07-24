@@ -1,86 +1,217 @@
 import streamlit as st
 import pandas as pd
+from streamlit_gsheets import GSheetsConnection
 
-# --- Fungsi untuk Memuat Data dari File Excel ---
-# Menggunakan st.cache_data agar data hanya dimuat sekali dan di-cache
-@st.cache_data
-def load_penduduk_data_from_excel():
-    """
-    Loads and preprocesses population data from an Excel file.
-    Expects 'Jumlah Penduduk (2020-2025).xlsx' with 'Tahun' and 'Jumlah Total (orang)' columns.
-    """
-    file_path = 'Jumlah Penduduk (2020-2025).xlsx'
+# --- Konfigurasi Google Sheets ---
+# ID Spreadsheet Anda (bisa ditemukan di URL Google Sheet Anda)
+# Pastikan ini sesuai dengan Google Sheet yang Anda bagikan ke Service Account!
+# Ambil URL Spreadsheet dari Streamlit secrets
+GOOGLE_SHEET_URL = st.secrets["connections"]["gsheets"]["spreadsheet"]
+
+# Nama-nama worksheet (tab) di Google Spreadsheet Anda
+WORKSHEET_NAME_PENDUDUK = "Jumlah Penduduk (2020-2025)"
+WORKSHEET_NAME_PENDIDIKAN = "Jumlah Penduduk (Pendidikan)" # Pastikan nama ini sudah benar di GSheet
+WORKSHEET_NAME_PEKERJAAN_DOMINAN = "Jenis Pekerjaan Dominan"
+WORKSHEET_NAME_JENIS_TANAH = "Jenis Tanah"
+WORKSHEET_NAME_INDUSTRI_UMKM = "Jumlah Industri UMKM"
+WORKSHEET_NAME_KK_RW = "Jumlah KK Menurut RW"
+WORKSHEET_NAME_STATUS_PEKERJA = "Jumlah Penduduk (status Pekerja)"
+WORKSHEET_NAME_DISABILITAS = "Penduduk Disabilitas"
+WORKSHEET_NAME_PENDUDUK_JENIS_KELAMIN = "Penduduk Menurut Jenis Kelamin"
+WORKSHEET_NAME_SARANA_PRASARANA = "Sarana dan Prasarana"
+WORKSHEET_NAME_SARANA_KEBERSIHAN = "Sarana Kebersihan"
+WORKSHEET_NAME_TENAGA_KERJA = "Tenaga Kerja"
+
+# --- Inisialisasi Koneksi Google Sheets ---
+@st.cache_resource(ttl=3600) # Cache the connection object for 1 hour
+def get_gsheets_connection():
+    """Establishes and returns a Streamlit GSheetsConnection."""
     try:
-        df = pd.read_excel(file_path)
-        
-        # Pre-processing: Sort data by 'Tahun'
-        if 'Tahun' in df.columns:
-            # Ensure 'Jumlah Total (orang)' column exists and is numeric
-            if 'Jumlah Total (orang)' in df.columns:
-                df['Jumlah Total (orang)'] = pd.to_numeric(df['Jumlah Total (orang)'], errors='coerce')
-                df = df.dropna(subset=['Jumlah Total (orang)']) # Drop rows with NaN values after conversion
-            else:
-                st.error(f"Kolom 'Jumlah Total (orang)' tidak ditemukan di file '{file_path}'. Pastikan nama kolom sudah benar.")
-                return pd.DataFrame()
-                
-            df_processed = df.sort_values(by='Tahun', ascending=True).reset_index(drop=True)
-            return df_processed
-        else:
-            st.error(f"Kolom 'Tahun' tidak ditemukan di file '{file_path}'.")
-            return pd.DataFrame() # Return empty DataFrame if column is missing
-    except FileNotFoundError:
-        st.error(f"File '{file_path}' tidak ditemukan. Pastikan file berada di folder yang sama dengan main.py.")
-        return pd.DataFrame() # Return empty DataFrame if file is not found
+        conn = st.connection("gsheets", type=GSheetsConnection)
+        return conn
     except Exception as e:
-        st.error(f"Terjadi error saat membaca file Excel: {e}. Pastikan format file dan isinya valid.")
-        return pd.DataFrame() # Return empty DataFrame if any other error occurs
+        st.error(f"Error establishing GSheetsConnection: {e}. "
+                 "Pastikan Anda telah menginstal 'streamlit-gsheets' dan mengatur secrets dengan benar.")
+        st.stop() # Stop the app if connection fails
+        return None
 
-# --- Fungsi untuk Memuat Data Pendidikan (Simulasi dari st.session_state) ---
-# Ini akan tetap menggunakan st.session_state karena belum ada file Excel spesifik untuknya.
-# Untuk data persisten, ini juga perlu diganti dengan koneksi database sungguhan.
-@st.cache_data
-def load_pendidikan_data_from_excel():
-    """
-    Memuat dan memproses data penduduk berdasarkan pendidikan dari file Excel.
-    """
-    file_path = 'Jumlah Penduduk (Pendidikan).xlsx'
+# --- Fungsi Generik untuk Memuat Data dari Google Sheets ---
+@st.cache_data(ttl=60) # Cache data for 1 minute for faster loading
+def load_data_from_gsheets(worksheet_name, usecols=None):
+    """Loads data from a specified worksheet in Google Sheets using st.connection."""
+    conn = get_gsheets_connection()
+    if conn is None:
+        return pd.DataFrame()
+
     try:
-        df = pd.read_excel(file_path)
-        
-        # Membersihkan spasi ekstra dari nama kolom
-        df.columns = df.columns.str.strip()
-        
-        # Kolom yang wajib ada di file Excel pendidikan
-        required_columns = ['Pendidikan', 'Jumlah']
-        
-        # Periksa apakah semua kolom yang dibutuhkan ada
-        if all(col in df.columns for col in required_columns):
-            # Konversi kolom 'Jumlah' menjadi numerik, ganti error dengan NaN
-            df['Jumlah'] = pd.to_numeric(df['Jumlah'], errors='coerce')
-            
-            # Hapus baris di mana data 'Jumlah' tidak valid (kosong atau bukan angka)
-            df.dropna(subset=['Jumlah'], inplace=True)
-            
-            # Pastikan tipe data kolom jumlah adalah integer
-            df['Jumlah'] = df['Jumlah'].astype(int)
+        # ttl for read operation is applied per read call
+        df = conn.read(
+            spreadsheet=GOOGLE_SHEET_URL,
+            worksheet=worksheet_name,
+            usecols=usecols,
+            ttl=5 # TTL for the read operation itself
+        ) 
+        df = df.dropna(how="all") # Drop rows that are entirely empty
+        return df
+    except Exception as e:
+        st.error(f"Terjadi error saat membaca data dari Google Sheet '{worksheet_name}': {e}")
+        return pd.DataFrame()
 
-            # Ganti nama kolom agar konsisten dengan halaman tampilan
-            df.rename(columns={'Pendidikan': 'Tingkat Pendidikan'}, inplace=True)
-            
-            # Hapus kolom 'No' jika ada, karena tidak diperlukan untuk visualisasi
-            if 'No' in df.columns:
-                df = df.drop(columns=['No'])
+# --- Fungsi Generik untuk Menulis/Memperbarui Data ke Google Sheets ---
+def write_data_to_gsheets(df_to_write, worksheet_name):
+    """Writes (overwrites) a DataFrame to a specified worksheet in Google Sheets."""
+    conn = get_gsheets_connection()
+    if conn is None:
+        return False
 
-            return df
-        else:
-            st.error(f"Satu atau lebih kolom berikut tidak ditemukan di '{file_path}': {', '.join(required_columns)}")
+    try:
+        conn.write(
+            spreadsheet=GOOGLE_SHEET_URL,
+            worksheet=worksheet_name,
+            df=df_to_write
+        )
+        return True
+    except Exception as e:
+        st.error(f"Terjadi error saat menulis data ke Google Sheet '{worksheet_name}': {e}")
+        return False
+
+# --- FUNGSI: Memuat Data Jumlah Penduduk (2020-2025) dari Google Sheet ---
+@st.cache_data(ttl=60)
+def load_penduduk_2020_from_gsheet():
+    """
+    Memuat dan memproses data jumlah penduduk dari Google Sheet.
+
+    Worksheet yang digunakan: 'Jumlah Penduduk (2020-2025)'
+    Wajib memiliki kolom: 'Tahun', 'Jumlah Laki-Laki (orang)', 'Jumlah Perempuan (orang)', 'Jumlah Total (orang)', 'Jumlah Kepala Keluarga (KK)'
+    """
+    df = load_data_from_gsheets(WORKSHEET_NAME_PENDUDUK)
+    if not df.empty:
+        df.columns = df.columns.str.strip() # Membersihkan nama kolom
+
+        required_columns = [
+            'Tahun',
+            'Jumlah Laki-Laki (orang)',
+            'Jumlah Perempuan (orang)',
+            'Jumlah Total (orang)',
+            'Jumlah Kepala Keluarga (KK)'
+        ]
+        if not all(col in df.columns for col in required_columns):
+            missing_cols = [col for col in required_columns if col not in df.columns]
+            st.error(f"Kolom yang diperlukan tidak ditemukan di worksheet '{WORKSHEET_NAME_PENDUDUK}'. "
+                     f"Kolom yang hilang: {missing_cols}. "
+                     f"Pastikan nama kolom di Google Sheet sudah benar (perhatikan kapitalisasi dan spasi).")
             return pd.DataFrame()
 
-    except FileNotFoundError:
-        st.error(f"File '{file_path}' tidak ditemukan. Pastikan file berada di folder yang sama dengan main.py.")
+        # Konversi kolom numerik
+        for col in ['Jumlah Laki-Laki (orang)', 'Jumlah Perempuan (orang)', 'Jumlah Total (orang)', 'Jumlah Kepala Keluarga (KK)']:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+        
+        df.dropna(subset=['Jumlah Total (orang)'], inplace=True) # Hapus baris dengan NaN di kolom kunci
+
+        df = df.sort_values(by='Tahun').reset_index(drop=True)
+    return df
+
+# --- FUNGSI: Memuat Data Pendidikan dari Google Sheet ---
+@st.cache_data(ttl=60)
+def load_pendidikan_data_from_gsheet():
+    """
+    Memuat dan memproses data jumlah penduduk (pendidikan) dari Google Sheet.
+
+    Worksheet yang digunakan: 'Jumlah Penduduk (Pendidikan)'
+    Wajib memiliki kolom: 'No', 'Pendidikan', 'Jumlah'
+    """
+    df = load_data_from_gsheets(WORKSHEET_NAME_PENDIDIKAN)
+    if not df.empty:
+        df.columns = df.columns.str.strip() # Membersihkan nama kolom
+
+        required_columns = ['No', 'Pendidikan', 'Jumlah']
+        if not all(col in df.columns for col in required_columns):
+            missing_cols = [col for col in required_columns if col not in df.columns]
+            st.error(f"Kolom yang diperlukan tidak ditemukan di worksheet '{WORKSHEET_NAME_PENDIDIKAN}'. "
+                     f"Kolom yang hilang: {missing_cols}. "
+                     f"Pastikan nama kolom di Google Sheet sudah benar (perhatikan kapitalisasi dan spasi).")
+            return pd.DataFrame()
+
+        # Konversi kolom 'Jumlah' ke numerik
+        df['Jumlah'] = pd.to_numeric(df['Jumlah'], errors='coerce')
+        df.dropna(subset=['Jumlah'], inplace=True) # Hapus baris dengan NaN di kolom 'Jumlah'
+
+        # Menetapkan urutan alami untuk kategori pendidikan
+        education_order = [
+            'Tidak Tamat SD',
+            'Tamat SD/Sederajat',
+            'Tamat SMP/Sederajat',
+            'Tamat SMA/Sederajat'
+        ]
+        # Pastikan kolom 'Pendidikan' ada sebelum membuat kategori
+        if 'Pendidikan' in df.columns:
+            df['Pendidikan'] = pd.Categorical(df['Pendidikan'], categories=education_order, ordered=True)
+            df = df.sort_values('Pendidikan').reset_index(drop=True)
+        else:
+            st.warning(f"Kolom 'Pendidikan' tidak ditemukan di worksheet '{WORKSHEET_NAME_PENDIDIKAN}'. Pengurutan kategori tidak dapat dilakukan.")
+    return df
+
+# --- FUNGSI: Memuat Data Jenis Pekerjaan Dominan dari Google Sheet ---
+@st.cache_data(ttl=60)
+def load_jenis_pekerjaan_dominan_gsheet():
+    """
+    Memuat dan memproses data jenis pekerjaan dominan dari Google Sheet.
+    Worksheet yang digunakan: 'Jenis Pekerjaan Dominan'
+    Wajib memiliki kolom: 'No.', 'Tanggal', 'Jenis Pekerjaan', 'Jumlah'
+    """
+    df = load_data_from_gsheets(WORKSHEET_NAME_PEKERJAAN_DOMINAN)
+    if not df.empty:
+        df.columns = df.columns.str.strip() # Membersihkan nama kolom
+
+        required_columns = ['No.', 'Tanggal', 'Jenis Pekerjaan', 'Jumlah']
+        if not all(col in df.columns for col in required_columns):
+            missing_cols = [col for col in required_columns if col not in df.columns]
+            st.error(f"Kolom yang diperlukan tidak ditemukan di worksheet '{WORKSHEET_NAME_PEKERJAAN_DOMINAN}'. "
+                     f"Kolom yang hilang: {missing_cols}. "
+                     f"Pastikan nama kolom di Google Sheet sudah benar (perhatikan kapitalisasi dan spasi).")
+            return pd.DataFrame()
+
+        # Konversi kolom 'Jumlah' ke numerik
+        df['Jumlah'] = pd.to_numeric(df['Jumlah'], errors='coerce')
+        df.dropna(subset=['Jumlah'], inplace=True) # Hapus baris dengan NaN di kolom 'Jumlah'
+        
+        # Konversi kolom 'Tanggal' ke datetime jika diperlukan untuk sorting/filter
+        # df['Tanggal'] = pd.to_datetime(df['Tanggal'], errors='coerce')
+        df.dropna(subset=['Tanggal'], inplace=True)
+
+        # Sortir berdasarkan Tanggal atau No. jika ada
+        if 'Tanggal' in df.columns:
+            df = df.sort_values(by='Tanggal').reset_index(drop=True)
+        elif 'No.' in df.columns:
+            df = df.sort_values(by='No.').reset_index(drop=True)
+    return df
+
+# --- FUNGSI: Memuat Data Jenis Tanah dari Google Sheet ---
+@st.cache_data(ttl=60)
+def load_jenis_tanah_gsheet():
+    """
+    Memuat dan memproses data jenis tanah dari Google Sheet.
+    Worksheet yang digunakan: 'Jenis Tanah'
+    Wajib memiliki kolom: 'Tanggal', 'Tanah Sawah (Ha)', 'Tanah Kering (Ha)', 'Tanah Basah (Ha)',
+    'Tanah Perkebunan (Ha)', 'Tanah Fasilitas Umum (Ha)', 'Tanah Hutan (Ha)',
+    'Total Luas Tanah (Ha)', 'Luas Desa/Kelurahan (Ha)', 'Status'
+    """
+    df = load_data_from_gsheets(WORKSHEET_NAME_JENIS_TANAH)
+    if df.empty:
         return pd.DataFrame()
-    except Exception as e:
-        st.error(f"Terjadi error saat membaca file Excel '{file_path}': {e}.")
+
+    df.columns = df.columns.str.strip() # Membersihkan nama kolom
+
+    required_columns = [
+        'Tanggal', 'Tanah Sawah (Ha)', 'Tanah Kering (Ha)', 'Tanah Basah (Ha)',
+        'Tanah Perkebunan (Ha)', 'Tanah Fasilitas Umum (Ha)', 'Tanah Hutan (Ha)',
+        'Total Luas Tanah (Ha)', 'Luas Desa/Kelurahan (Ha)', 'Status'
+    ]
+    if not all(col in df.columns for col in required_columns):
+        missing_cols = [col for col in required_columns if col not in df.columns]
+        st.error(f"Kolom yang diperlukan tidak ditemukan di worksheet '{WORKSHEET_NAME_JENIS_TANAH}'. "
+                 f"Kolom yang hilang: {missing_cols}. "
+                 f"Pastikan nama kolom di Google Sheet sudah benar (perhatikan kapitalisasi dan spasi).")
         return pd.DataFrame()
 
     # Konversi kolom numerik
@@ -190,7 +321,7 @@ def load_status_pekerja_data_gsheet():
 
     df.columns = df.columns.str.strip() # Membersihkan nama kolom
 
-    required_columns = ['No.', 'Kriteria',	'Jumlah']
+    required_columns = ['No.', 'Kriteria', 'Jumlah']
     if not all(col in df.columns for col in required_columns):
         missing_cols = [col for col in required_columns if col not in df.columns]
         st.error(f"Kolom yang diperlukan tidak ditemukan di worksheet '{WORKSHEET_NAME_STATUS_PEKERJA}'. "

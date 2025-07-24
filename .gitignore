@@ -1,0 +1,64 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+build/
+dist/
+develop-eggs/
+.eggs/
+*.egg-info
+.installed.txt
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+.pytest_cache/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.ipynb_checkpoints/ # Jupyter notebooks checkpoints
+
+# IDEs and Editors
+.vscode/ # VS Code
+.idea/   # PyCharm / IntelliJ
+*.iml
+*.iws
+*.ipr
+*.directory
+.DS_Store # macOS
+Thumbs.db # Windows
+
+# OS or editor-generated files
+*~
+*.swp
+*.bak
+*.tmp
+
+.streamlit/secrets.toml

@@ -25,4 +25,4 @@ def run():
     st.info("Pilih salah satu opsi dari sidebar untuk melihat visualisasi data.")
 
     st.markdown("---")
-    st.write("Dibuat dengan ❤️ oleh Tim Data Kelurahan.")
+    st.write("Dibuat oleh @timcihuy")
