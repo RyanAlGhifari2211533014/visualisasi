@@ -5,7 +5,7 @@ import io
 from fpdf import FPDF # Pastikan 'fpdf2' terinstal.
 
 # Import fungsi pemuat data
-from data_loader import load_kk_rw_data_gsheet
+from data_loader import load_status_pekerja_data_gsheet
 
 # Nonaktifkan batas baris Altair agar bisa memproses data besar
 alt.data_transformers.disable_max_rows()
@@ -15,31 +15,31 @@ alt.data_transformers.disable_max_rows()
 def to_excel(df: pd.DataFrame):
     """
     Mengonversi DataFrame Pandas menjadi file Excel di dalam memori.
-    Akan mengecualikan kolom 'LAKI- LAKI' dan 'PEREMPUAN' jika ada, sesuai dengan visualisasi Colab.
+    Akan mengecualikan kolom 'No.' jika ada.
     """
-    # Buat salinan DataFrame dan hapus kolom yang tidak diinginkan
-    df_filtered = df.drop(columns=['LAKI- LAKI', 'PEREMPUAN'], errors='ignore')
+    # Buat salinan DataFrame dan hapus kolom 'No.' jika ada
+    df_filtered = df.drop(columns=['No.'], errors='ignore')
     
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer: # Menggunakan xlsxwriter untuk Excel
-        df_filtered.to_excel(writer, index=False, sheet_name='DataKK_RW')
+        df_filtered.to_excel(writer, index=False, sheet_name='DataStatusPekerja')
     processed_data = output.getvalue()
     return processed_data
 
 def df_to_pdf(df: pd.DataFrame):
     """
-    Mengonversi DataFrame Pandas menjadi file PDF untuk data Jumlah KK Menurut RW.
-    Akan mengecualikan kolom 'LAKI- LAKI' dan 'PEREMPUAN', dan mempertahankan format sebelumnya.
+    Mengonversi DataFrame Pandas menjadi file PDF untuk data Status Pekerja.
+    Akan mengecualikan kolom 'No.' dan mempertahankan format sebelumnya.
     """
     pdf = FPDF(orientation="P", unit="mm", format="A4") # 'P' untuk Portrait
     pdf.add_page()
     pdf.set_font("Arial", "B", 12)
     
-    pdf.cell(0, 10, 'Data Jumlah Kepala Keluarga (KK) per RW', 0, 1, 'C')
+    pdf.cell(0, 10, 'Data Penduduk Berdasarkan Status Pekerjaan', 0, 1, 'C')
     pdf.ln(10)
 
-    # Buat salinan DataFrame dan hapus kolom yang tidak diinginkan
-    df_for_pdf = df.drop(columns=['LAKI- LAKI', 'PEREMPUAN'], errors='ignore')
+    # Buat salinan DataFrame dan hapus kolom 'No.' jika ada
+    df_for_pdf = df.drop(columns=['No.'], errors='ignore')
     
     # Perbaikan: Tambahkan kolom 'No' ke DataFrame untuk PDF sebagai nomor urut
     df_for_pdf.insert(0, 'No.', range(1, 1 + len(df_for_pdf))) 
@@ -51,8 +51,8 @@ def df_to_pdf(df: pd.DataFrame):
     # Menentukan lebar kolom secara manual untuk kontrol yang lebih baik
     col_widths = {
         'No.': 15,
-        'RW': 40, # Lebar untuk RW
-        'JUMLAH KK': 60 # Lebar untuk Jumlah KK
+        'Kriteria': 100, # Lebar lebih besar untuk kriteria
+        'Jumlah': 40
     }
     
     headers = df_for_pdf.columns.tolist()
@@ -92,7 +92,7 @@ def df_to_pdf(df: pd.DataFrame):
                 else:
                     formatted_item = str(item) # Biarkan float jika ada desimal
             
-            pdf.cell(current_col_width, 10, formatted_item.encode('latin-1', 'replace').decode('latin-1'), border=1, ln=False)
+            pdf.cell(current_col_width, 10, formatted_item.encode('latin-1', 'replace').decode('latin-1'), border=1, align='C')
         pdf.ln()
     
     # Tambahkan teks sumber di bagian bawah tabel
@@ -106,61 +106,64 @@ def df_to_pdf(df: pd.DataFrame):
 
 def run():
     """
-    Merender halaman 'Jumlah KK Menurut RW'.
+    Merender halaman 'Jumlah Penduduk (Status Pekerja)'.
     """
-    st.title("👨‍👩‍👧‍👦 Jumlah KK Menurut RW")
+    st.title("👨‍💼 Jumlah Penduduk (Status Pekerja)")
 
     # Muat data dari Google Sheets
-    df_kk_rw = load_kk_rw_data_gsheet()
+    df_status_pekerja = load_status_pekerja_data_gsheet()
 
-    if not df_kk_rw.empty:
-        # --- Tampilkan Tabel Data (tanpa kolom LAKI- LAKI, PEREMPUAN) ---
-        st.subheader("Tabel Rincian Jumlah Kepala Keluarga per RW")
-        df_display = df_kk_rw.drop(columns=['LAKI- LAKI', 'PEREMPUAN'], errors='ignore')
+    if not df_status_pekerja.empty:
+        # --- Tampilkan Tabel Data (tanpa kolom 'No.') ---
+        st.subheader("Tabel Rincian Status Pekerja")
+        df_display = df_status_pekerja.drop(columns=['No.'], errors='ignore')
         st.dataframe(df_display, use_container_width=True)
         st.markdown("---")
 
         # --- Tampilkan Visualisasi dengan Altair ---
-        st.subheader("Grafik Perbandingan Jumlah Kepala Keluarga (KK) per RW")
+        st.subheader("Grafik Proporsi Penduduk Berdasarkan Status Pekerjaan")
         
         # Pastikan kolom yang dibutuhkan ada untuk grafik
-        if 'RW' in df_kk_rw.columns and 'JUMLAH KK' in df_kk_rw.columns:
-            # Mengurutkan data berdasarkan 'JUMLAH KK'
-            df_sorted = df_kk_rw.sort_values('JUMLAH KK', ascending=False)
+        if 'Kriteria' in df_status_pekerja.columns and 'Jumlah' in df_status_pekerja.columns:
+            # Hitung total untuk label tengah
+            total_penduduk = df_status_pekerja['Jumlah'].sum()
 
-            chart = alt.Chart(df_sorted).mark_bar(
-                cornerRadiusEnd=4
-            ).encode(
-                x=alt.X('JUMLAH KK:Q', title='Jumlah Kepala Keluarga (KK)'),
-                y=alt.Y('RW:N', sort='-x', title='Wilayah RW'), # Sortir berdasarkan Jumlah KK secara menurun
-                color=alt.Color('RW:N', legend=None), # Warna berdasarkan RW, tanpa legenda
+            # Base chart untuk donut
+            base = alt.Chart(df_status_pekerja).encode(
+                theta=alt.Theta("Jumlah:Q", stack=True)
+            )
+
+            # Donut chart
+            pie = base.mark_arc(outerRadius=120, innerRadius=80).encode(
+                color=alt.Color("Kriteria:N", title="Kriteria"),
+                order=alt.Order("Jumlah:Q", sort="descending"),
                 tooltip=[
-                    alt.Tooltip('RW:N', title='Wilayah RW'),
-                    alt.Tooltip('JUMLAH KK:Q', title='Jumlah KK')
+                    alt.Tooltip("Kriteria:N", title="Kriteria"),
+                    alt.Tooltip("Jumlah:Q", title="Jumlah"),
+                    alt.Tooltip("Jumlah:Q", title="Persentase", format=".1%", stack="normalize") # Persentase
                 ]
-            ).properties(
-                title='Perbandingan Jumlah Kepala Keluarga (KK) per RW'
             )
 
-            # Menambahkan label angka di ujung setiap bar
-            text = chart.mark_text(
-                align='left',
-                baseline='middle',
-                dx=3 # Jarak label dari batang
-            ).encode(
-                x='JUMLAH KK:Q',
-                y=alt.Y('RW:N', sort='-x'),
-                text=alt.Text('JUMLAH KK:Q', format='.0f') # Format angka tanpa desimal
+            # Text labels for percentages and counts on slices
+            text = base.mark_text(radius=140).encode(
+                text=alt.Text("Jumlah:Q", format=".1f", stack="normalize"), # Persentase
+                order=alt.Order("Jumlah:Q", sort="descending"),
+                color=alt.value("black") # Warna teks agar terlihat jelas
             )
+            
+            # Gabungkan chart dan label
+            chart_with_labels = pie + text
 
-            final_chart = chart + text # Gabungkan bar chart dan label
-            st.altair_chart(final_chart, use_container_width=True)
+            st.altair_chart(chart_with_labels, use_container_width=True)
+
+            # Tampilkan total penduduk di bawah grafik
+            st.markdown(f"**Total Penduduk: {total_penduduk:,.0f} Orang**", unsafe_allow_html=True)
         else:
-            st.warning("Kolom 'RW' atau 'JUMLAH KK' tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+            st.warning("Kolom 'Kriteria' atau 'Jumlah' tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
 
         # --- Siapkan Data dan Tombol Download ---
-        df_excel = to_excel(df_kk_rw) # df_kk_rw sudah dimuat dari GSheet
-        pdf_data = df_to_pdf(df_kk_rw) # df_kk_rw sudah dimuat dari GSheet
+        df_excel = to_excel(df_status_pekerja) # df_status_pekerja sudah dimuat dari GSheet
+        pdf_data = df_to_pdf(df_status_pekerja) # df_status_pekerja sudah dimuat dari GSheet
 
         col1, col2 = st.columns(2)
 
@@ -168,7 +171,7 @@ def run():
             st.download_button(
                 label="Download as XLSX",
                 data=df_excel,
-                file_name="data_kk_rw.xlsx",
+                file_name="data_status_pekerja.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True
             )
@@ -177,9 +180,9 @@ def run():
             st.download_button(
                 label="Download as PDF",
                 data=pdf_data,
-                file_name="data_kk_rw.pdf",
+                file_name="data_status_pekerja.pdf",
                 mime="application/pdf",
                 use_container_width=True
             )
     else:
-        st.info("Belum ada data jumlah KK per RW yang valid untuk divisualisasikan. Pastikan Google Sheet Anda dapat diakses dan memiliki data yang benar di worksheet 'Jumlah KK Menurut RW' dengan kolom 'RW', 'LAKI- LAKI', 'PEREMPUAN', dan 'JUMLAH KK'.")
+        st.info("Belum ada data status pekerja yang valid untuk divisualisasikan. Pastikan Google Sheet Anda dapat diakses dan memiliki data yang benar di worksheet 'Jumlah Penduduk (Status Pekerja)' dengan kolom 'No.', 'Kriteria', dan 'Jumlah'.")

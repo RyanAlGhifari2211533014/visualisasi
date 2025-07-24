@@ -14,7 +14,9 @@ WORKSHEET_NAME_PENDIDIKAN = "Jumlah Penduduk (Pendidikan)" # Pastikan nama ini s
 WORKSHEET_NAME_PEKERJAAN_DOMINAN = "Jenis Pekerjaan Dominan"
 WORKSHEET_NAME_JENIS_TANAH = "Jenis Tanah"
 WORKSHEET_NAME_INDUSTRI_UMKM = "Jumlah Industri UMKM"
-WORKSHEET_NAME_KK = "Jumlah KK Menurut RW"
+WORKSHEET_NAME_KK_RW = "Jumlah KK Menurut RW"
+WORKSHEET_NAME_STATUS_PEKERJA = "Jumlah Penduduk (status Pekerja)"
+WORKSHEET_NAME_DISABILITAS = "Penduduk Disabilitas"
 
 # --- Inisialisasi Koneksi Google Sheets ---
 @st.cache_resource(ttl=3600) # Cache the connection object for 1 hour
@@ -260,5 +262,122 @@ def load_umkm_data_gsheet():
     # Sortir berdasarkan 'No.' jika ada
     if 'No.' in df.columns:
         df = df.sort_values(by='No.').reset_index(drop=True)
+    return df
 
+# --- FUNGSI: Memuat Data Jumlah KK Menurut RW dari Google Sheet ---
+@st.cache_data(ttl=60)
+def load_kk_rw_data_gsheet():
+    """
+    Memuat dan memproses data Jumlah KK Menurut RW dari Google Sheet.
+    Worksheet yang digunakan: 'Jumlah KK Menurut RW'
+    Wajib memiliki kolom: 'RW', 'LAKI- LAKI', 'PEREMPUAN', 'JUMLAH KK'
+    """
+    df = load_data_from_gsheets(WORKSHEET_NAME_KK_RW)
+    if df.empty:
+        return pd.DataFrame()
+
+    df.columns = df.columns.str.strip() # Membersihkan nama kolom
+
+    required_columns = ['RW', 'LAKI- LAKI', 'PEREMPUAN', 'JUMLAH KK']
+    if not all(col in df.columns for col in required_columns):
+        missing_cols = [col for col in required_columns if col not in df.columns]
+        st.error(f"Kolom yang diperlukan tidak ditemukan di worksheet '{WORKSHEET_NAME_KK_RW}'. "
+                 f"Kolom yang hilang: {missing_cols}. "
+                 f"Pastikan nama kolom di Google Sheet sudah benar (perhatikan kapitalisasi dan spasi).")
+        return pd.DataFrame()
+
+    # Hapus baris yang tidak memiliki data 'JUMLAH KK' (biasanya baris total atau kosong)
+    df.dropna(subset=['JUMLAH KK'], inplace=True)
+
+    # Konversi kolom numerik
+    numeric_cols = ['LAKI- LAKI', 'PEREMPUAN', 'JUMLAH KK']
+    for col in numeric_cols:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    
+    df.dropna(subset=['JUMLAH KK'], inplace=True) # Hapus baris dengan NaN di kolom 'JUMLAH KK'
+
+    # Mengubah tipe data 'JUMLAH KK' menjadi angka bulat (integer)
+    df['JUMLAH KK'] = df['JUMLAH KK'].astype(int)
+
+    # Sortir berdasarkan 'JUMLAH KK'
+    df = df.sort_values(by='JUMLAH KK', ascending=False).reset_index(drop=True)
+    return df
+
+# --- FUNGSI Memuat Data Jumlah Penduduk (Status Pekerja) dari Google Sheet ---
+@st.cache_data(ttl=60)
+def load_status_pekerja_data_gsheet():
+    """
+    Memuat dan memproses data Jumlah Penduduk (Status Pekerja) dari Google Sheet.
+    Worksheet yang digunakan: 'Jumlah Penduduk (Status Pekerja)'
+    Wajib memiliki kolom: 'No.', 'Kriteria', 'Jumlah'
+    """
+    df = load_data_from_gsheets(WORKSHEET_NAME_STATUS_PEKERJA)
+    if df.empty:
+        return pd.DataFrame()
+
+    df.columns = df.columns.str.strip() # Membersihkan nama kolom
+
+    required_columns = ['No.', 'Kriteria', 'Jumlah']
+    if not all(col in df.columns for col in required_columns):
+        missing_cols = [col for col in required_columns if col not in df.columns]
+        st.error(f"Kolom yang diperlukan tidak ditemukan di worksheet '{WORKSHEET_NAME_STATUS_PEKERJA}'. "
+                 f"Kolom yang hilang: {missing_cols}. "
+                 f"Pastikan nama kolom di Google Sheet sudah benar (perhatikan kapitalisasi dan spasi).")
+        return pd.DataFrame()
+
+    # Konversi kolom 'Jumlah' ke numerik
+    df['Jumlah'] = pd.to_numeric(df['Jumlah'], errors='coerce')
+    df.dropna(subset=['Jumlah'], inplace=True) # Hapus baris dengan NaN di kolom 'Jumlah'
+    
+    # Mengubah tipe data 'Jumlah' menjadi angka bulat (integer)
+    df['Jumlah'] = df['Jumlah'].astype(int)
+
+    # Sortir berdasarkan 'No.' jika ada (atau 'Jumlah' jika lebih relevan untuk pie chart)
+    if 'No.' in df.columns:
+        df = df.sort_values(by='No.').reset_index(drop=True)
+    # Anda bisa juga menambahkan sorting berdasarkan Jumlah jika ingin urutan slice yang berbeda
+    # df = df.sort_values(by='Jumlah', ascending=False).reset_index(drop=True)
+    return df
+
+    # --- FUNGSI BARU: Memuat Data Penduduk Disabilitas dari Google Sheet ---
+@st.cache_data(ttl=60)
+def load_disabilitas_data_gsheet():
+    """
+    Memuat dan memproses data Penduduk Disabilitas dari Google Sheet.
+    Worksheet yang digunakan: 'Penduduk Disabilitas'
+    Wajib memiliki kolom: 'No.', 'Tanggal', 'Jenis Cacat', 'Laki-Laki (orang)', 'Perempuan (orang)', 'Jumlah (Orang)'
+    """
+    df = load_data_from_gsheets(WORKSHEET_NAME_DISABILITAS)
+    if df.empty:
+        return pd.DataFrame()
+
+    df.columns = df.columns.str.strip() # Membersihkan nama kolom
+
+    required_columns = ['No.', 'Tanggal', 'Jenis Cacat', 'Laki-Laki (orang)', 'Perempuan (orang)', 'Jumlah (Orang)']
+    if not all(col in df.columns for col in required_columns):
+        missing_cols = [col for col in required_columns if col not in df.columns]
+        st.error(f"Kolom yang diperlukan tidak ditemukan di worksheet '{WORKSHEET_NAME_DISABILITAS}'. "
+                 f"Kolom yang hilang: {missing_cols}. "
+                 f"Pastikan nama kolom di Google Sheet sudah benar (perhatikan kapitalisasi dan spasi).")
+        return pd.DataFrame()
+
+    # Konversi kolom numerik
+    numeric_cols = ['Laki-Laki (orang)', 'Perempuan (orang)', 'Jumlah (Orang)']
+    for col in numeric_cols:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    
+    df.dropna(subset=['Jumlah (Orang)'], inplace=True) # Hapus baris dengan NaN di kolom 'Jumlah (Orang)'
+
+    # Konversi kolom 'Tanggal' ke datetime jika diperlukan untuk sorting/filter
+    if 'Tanggal' in df.columns and not df['Tanggal'].empty and df['Tanggal'].iloc[0] is not None:
+        try:
+            df['Tanggal'] = pd.to_datetime(df['Tanggal'], errors='coerce')
+            df.dropna(subset=['Tanggal'], inplace=True)
+            df = df.sort_values(by='Tanggal').reset_index(drop=True)
+        except Exception as date_e:
+            st.warning(f"Kolom 'Tanggal' tidak dapat dikonversi ke format tanggal yang valid. Sorting berdasarkan tanggal mungkin tidak akurat. Detail: {date_e}")
+            if 'No.' in df.columns:
+                df = df.sort_values(by='No.').reset_index(drop=True)
+    elif 'No.' in df.columns:
+        df = df.sort_values(by='No.').reset_index(drop=True)
     return df

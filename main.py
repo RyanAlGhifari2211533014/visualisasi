@@ -14,7 +14,7 @@
 # pip install seaborn
 # pip install openpyxl
 # pip install fpdf2
-# pip install streamlit_gsheets
+# pip install st-gsheets-connection
 # pip install XlsxWriter
 
 # === IMPORT LIBRARY UTAMA ===
@@ -55,8 +55,8 @@ from pages import jenis_pekerjaan_dominan
 from pages import jenis_tanah
 from pages import jumlah_industri_umkm
 from pages import jumlah_kk_menurut_rw
-# from pages import jumlah_penduduk_status_pekerja
-# from pages import penduduk_disabilitas
+from pages import jumlah_penduduk_status_pekerja
+from pages import penduduk_disabilitas
 # from pages import penduduk_menurut_jenis_kelamin
 # from pages import sarana_dan_prasarana
 # from pages import sarana_kebersihan
@@ -113,10 +113,10 @@ elif selected == 'Jumlah Industri UMKM':
     jumlah_industri_umkm.run()
 elif selected == 'Jumlah KK Menurut RW':
     jumlah_kk_menurut_rw.run()
-# elif selected == 'Jumlah Penduduk (Status Pekerja)':
-#     jumlah_penduduk_status_pekerja.run()
-# elif selected == 'Penduduk Disabilitas':
-#     penduduk_disabilitas.run()
+elif selected == 'Jumlah Penduduk (Status Pekerja)':
+    jumlah_penduduk_status_pekerja.run()
+elif selected == 'Penduduk Disabilitas':
+    penduduk_disabilitas.run()
 # elif selected == 'Penduduk Menurut Jenis Kelamin':
 #     penduduk_menurut_jenis_kelamin.run()
 # elif selected == 'Sarana dan Prasarana':
