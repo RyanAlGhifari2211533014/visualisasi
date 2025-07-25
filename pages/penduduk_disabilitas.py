@@ -104,10 +104,24 @@ def df_to_pdf(df: pd.DataFrame):
 
     return bytes(pdf.output())
 
-# --- FUNGSI BARU UNTUK GRAFIK SAJA ---
-def create_disabilitas_chart_only():
+# --- Fungsi utama untuk menjalankan halaman ---
+
+def run():
+    """
+    Merender halaman 'Penduduk Disabilitas'.
+    """
+    st.title("♿ Penduduk Disabilitas")
+
+    # Muat data dari Google Sheets
     df_disabilitas = load_disabilitas_data_gsheet()
+
     if not df_disabilitas.empty:
+        # --- Tampilkan Tabel Data (tanpa kolom No., Tanggal) ---
+        st.subheader("Tabel Rincian Data Disabilitas")
+        df_display = df_disabilitas.drop(columns=['No.', 'Tanggal'], errors='ignore')
+        st.dataframe(df_display, use_container_width=True)
+        st.markdown("---")
+
         # --- Tampilkan Visualisasi dengan Altair ---
         st.subheader("Grafik Jumlah Penyandang Disabilitas Berdasarkan Jenis Kelamin")
         
@@ -163,26 +177,6 @@ def create_disabilitas_chart_only():
         else:
             st.warning("Kolom yang diperlukan ('Jenis Cacat', 'Laki-Laki (orang)', 'Perempuan (orang)') tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
 
-def run():
-    """
-    Merender halaman 'Penduduk Disabilitas'.
-    """
-    st.title("♿ Penduduk Disabilitas")
-     # Muat data dari Google Sheets
-    df_disabilitas = load_disabilitas_data_gsheet()
-
-    if not df_disabilitas.empty:
-        # --- Tampilkan Tabel Data ---
-        st.subheader("Tabel Rincian Data Disabilitas")
-        df_display = df_disabilitas.drop(columns=['No.', 'Tanggal'], errors='ignore')
-        st.dataframe(df_display, use_container_width=True)
-        st.markdown("---")
-
-        # --- Tampilkan Visualisasi dengan Altair ---
-        st.subheader("Grafik Jumlah Penyandang Disabilitas Berdasarkan Jenis Kelamin")
-        create_disabilitas_chart_only() # PANGGIL FUNGSI GRAFIK YANG BARU
-    # Muat data dari Google Sheets
-   
         # --- Siapkan Data dan Tombol Download ---
         df_excel = to_excel(df_disabilitas) # df_disabilitas sudah dimuat dari GSheet
         pdf_data = df_to_pdf(df_disabilitas) # df_disabilitas sudah dimuat dari GSheet
