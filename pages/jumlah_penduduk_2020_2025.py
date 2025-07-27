@@ -114,7 +114,6 @@ def run():
 
     # Memuat data penduduk
     df_penduduk = load_penduduk_2020_from_gsheet()
-
     if not df_penduduk.empty:
         st.subheader("Data Jumlah Penduduk")
         st.dataframe(df_penduduk)

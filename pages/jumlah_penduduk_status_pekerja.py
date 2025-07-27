@@ -140,17 +140,17 @@ def run():
                 tooltip=[
                     alt.Tooltip("Kriteria:N", title="Kriteria"),
                     alt.Tooltip("Jumlah:Q", title="Jumlah"),
-                    alt.Tooltip("Jumlah:Q", title="Persentase", format=".1%", stack="normalize") # Persentase
+                    alt.Tooltip("Persentase:Q", title="Persentase", format=".1%")  # ✅ Sudah ada kolom 'Persentase'
                 ]
             )
 
-            # Text labels for percentages and counts on slices
+            # Text labels for percentages
             text = base.mark_text(radius=140).encode(
-                text=alt.Text("Jumlah:Q", format=".1f", stack="normalize"), # Persentase
+                text=alt.Text("Persentase:Q", format=".1%"),  # ✅ Gunakan kolom yang sudah dihitung
                 order=alt.Order("Jumlah:Q", sort="descending"),
-                color=alt.value("black") # Warna teks agar terlihat jelas
+                color=alt.value("black")
             )
-            
+
             # Gabungkan chart dan label
             chart_with_labels = pie + text
 
