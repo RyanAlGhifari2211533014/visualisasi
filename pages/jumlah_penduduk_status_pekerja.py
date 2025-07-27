@@ -24,7 +24,7 @@ def to_excel(df: pd.DataFrame):
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer: # Menggunakan xlsxwriter untuk Excel
         df_filtered.to_excel(writer, index=False, sheet_name='DataStatusPekerja')
     processed_data = output.getvalue()
-    return processed_data
+    return output.getvalue() # Mengembalikan nilai BytesIO
 
 def df_to_pdf(df: pd.DataFrame):
     """
@@ -102,6 +102,59 @@ def df_to_pdf(df: pd.DataFrame):
 
     return bytes(pdf.output())
 
+# --- FUNGSI: Mendapatkan Objek Grafik untuk Halaman ini ---
+def get_status_pekerja_chart():
+    """
+    Membuat dan mengembalikan objek grafik Altair (Donut Chart) untuk Status Pekerja.
+    """
+    df_status_pekerja = load_status_pekerja_data_gsheet()
+
+    if df_status_pekerja.empty:
+        st.info("Data tidak tersedia untuk grafik ini.")
+        return None
+
+    if 'Kriteria' in df_status_pekerja.columns and 'Jumlah' in df_status_pekerja.columns:
+        base = alt.Chart(df_status_pekerja).encode(
+            theta=alt.Theta("Jumlah:Q", stack=True)
+        ).properties(
+            title='Proporsi Penduduk Berdasarkan Status Pekerjaan'
+        ).transform_joinaggregate(
+            TotalJumlah='sum(Jumlah)'  # ✅ Tidak pakai JoinAggregateFieldDef manual
+        ).transform_calculate(
+            percent="datum.Jumlah / datum.TotalJumlah"
+        )
+
+        pie = base.mark_arc(outerRadius=120, innerRadius=80).encode(
+            color=alt.Color("Kriteria:N", title="Kriteria"),
+            order=alt.Order("Jumlah:Q", sort="descending"),
+            tooltip=[
+                alt.Tooltip("Kriteria:N", title="Kriteria"),
+                alt.Tooltip("Jumlah:Q", title="Jumlah", format=".0f"),
+                alt.Tooltip("percent:Q", title="Persentase", format=".1%")
+            ]
+        )
+
+        # Text labels for percentages
+        text_percent = base.mark_text(radius=140).encode(
+            text=alt.Text("percent:Q", format=".1%"), # Menggunakan persentase yang dihitung
+            order=alt.Order("Jumlah:Q", sort="descending"),
+            color=alt.value("black") # Warna teks agar terlihat jelas
+        )
+
+        # Text labels for counts (jumlah orang)
+        text_count = base.mark_text(radius=100).encode( # Radius lebih kecil agar di dalam donut
+            text=alt.Text("Jumlah:Q", format=".0f"), # Jumlah orang
+            order=alt.Order("Jumlah:Q", sort="descending"),
+            color=alt.value("white") # Warna teks agar terlihat jelas di dalam donut
+        )
+        
+        # Gabungkan pie dan text labels
+        final_chart = pie + text_percent + text_count
+        return final_chart
+    else:
+        st.warning("Kolom 'Kriteria' atau 'Jumlah' tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+        return None
+
 # --- Fungsi utama untuk menjalankan halaman ---
 
 def run():
@@ -123,43 +176,27 @@ def run():
         # --- Tampilkan Visualisasi dengan Altair ---
         st.subheader("Grafik Proporsi Penduduk Berdasarkan Status Pekerjaan")
         
-        # Pastikan kolom yang dibutuhkan ada untuk grafik
-        if 'Kriteria' in df_status_pekerja.columns and 'Jumlah' in df_status_pekerja.columns:
-            # Hitung total untuk label tengah
+        chart_obj = get_status_pekerja_chart() # Panggil fungsi pembuat grafik
+        if chart_obj:
+            st.altair_chart(chart_obj, use_container_width=True)
+
+            # Tampilkan total penduduk di bawah grafik (tetap di halaman ini)
             total_penduduk = df_status_pekerja['Jumlah'].sum()
-
-            # Base chart untuk donut
-            base = alt.Chart(df_status_pekerja).encode(
-                theta=alt.Theta("Jumlah:Q", stack=True)
-            )
-
-            # Donut chart
-            pie = base.mark_arc(outerRadius=120, innerRadius=80).encode(
-                color=alt.Color("Kriteria:N", title="Kriteria"),
-                order=alt.Order("Jumlah:Q", sort="descending"),
-                tooltip=[
-                    alt.Tooltip("Kriteria:N", title="Kriteria"),
-                    alt.Tooltip("Jumlah:Q", title="Jumlah"),
-                    alt.Tooltip("Persentase:Q", title="Persentase", format=".1%")  # ✅ Sudah ada kolom 'Persentase'
-                ]
-            )
-
-            # Text labels for percentages
-            text = base.mark_text(radius=140).encode(
-                text=alt.Text("Persentase:Q", format=".1%"),  # ✅ Gunakan kolom yang sudah dihitung
-                order=alt.Order("Jumlah:Q", sort="descending"),
-                color=alt.value("black")
-            )
-
-            # Gabungkan chart dan label
-            chart_with_labels = pie + text
-
-            st.altair_chart(chart_with_labels, use_container_width=True)
-
-            # Tampilkan total penduduk di bawah grafik
             st.markdown(f"**Total Penduduk: {total_penduduk:,.0f} Orang**", unsafe_allow_html=True)
+
+            st.markdown(
+                """
+                <div style="background-color:#e6f3ff; padding: 10px; border-radius: 5px;">
+                    <p style="font-size: 14px; color: #333;">
+                        Grafik ini menunjukkan proporsi penduduk berdasarkan status pekerjaan.
+                        Data ini penting untuk analisis ketenagakerjaan dan perencanaan program pemberdayaan.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
         else:
-            st.warning("Kolom 'Kriteria' atau 'Jumlah' tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+            st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
 
         # --- Siapkan Data dan Tombol Download ---
         df_excel = to_excel(df_status_pekerja) # df_status_pekerja sudah dimuat dari GSheet

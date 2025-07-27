@@ -24,7 +24,7 @@ def to_excel(df: pd.DataFrame):
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer: # Menggunakan xlsxwriter untuk Excel
         df_filtered.to_excel(writer, index=False, sheet_name='DataUMKM')
     processed_data = output.getvalue()
-    return processed_data
+    return output.getvalue() # Mengembalikan nilai BytesIO
 
 def df_to_pdf(df: pd.DataFrame):
     """
@@ -58,6 +58,7 @@ def df_to_pdf(df: pd.DataFrame):
     
     headers = df_for_pdf.columns.tolist()
     # Hitung lebar default untuk kolom yang tidak didefinisikan secara eksplisit
+    # Pastikan pembagian tidak oleh nol
     remaining_width = effective_page_width - sum(col_widths.get(h, 0) for h in headers)
     remaining_cols = len(headers) - sum(1 for h in headers if h in col_widths)
     default_col_width = remaining_width / remaining_cols if remaining_cols > 0 else 20
@@ -103,6 +104,51 @@ def df_to_pdf(df: pd.DataFrame):
 
     return bytes(pdf.output())
 
+# --- FUNGSI BARU: Mendapatkan Objek Grafik untuk Halaman ini ---
+def get_umkm_chart():
+    """
+    Membuat dan mengembalikan objek grafik Altair untuk Jumlah Industri UMKM.
+    """
+    df_umkm = load_umkm_data_gsheet()
+
+    if df_umkm.empty:
+        st.info("Data tidak tersedia untuk grafik ini.")
+        return None
+    
+    # Pastikan kolom yang dibutuhkan ada untuk grafik
+    if 'Jenis' in df_umkm.columns and 'Jumlah' in df_umkm.columns:
+        # Membuat bar chart horizontal dengan Altair
+        chart = alt.Chart(df_umkm).mark_bar(
+            cornerRadiusEnd=4
+        ).encode(
+            x=alt.X('Jumlah:Q', title='Jumlah Unit Usaha'),
+            y=alt.Y('Jenis:N', sort='-x', title='Jenis Industri'), # Sortir berdasarkan Jumlah secara menurun
+            color=alt.Color('Jenis:N', legend=None), # Warna berdasarkan Jenis, tanpa legenda
+            tooltip=[
+                alt.Tooltip('Jenis:N', title='Jenis Industri'),
+                alt.Tooltip('Jumlah:Q', title='Jumlah', format='.0f') # Format angka tanpa desimal
+            ]
+        ).properties(
+            title='Jumlah Unit Usaha per Jenis Industri UMKM'
+        )
+
+        # Menambahkan label angka di ujung setiap bar
+        text = chart.mark_text(
+            align='left',
+            baseline='middle',
+            dx=3 # Jarak label dari batang
+        ).encode(
+            x='Jumlah:Q',
+            y=alt.Y('Jenis:N', sort='-x'),
+            text=alt.Text('Jumlah:Q', format='.0f') # Format angka tanpa desimal
+        )
+
+        final_chart = chart + text # Gabungkan bar chart dan label
+        return final_chart
+    else:
+        st.warning("Kolom 'Jenis' atau 'Jumlah' tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+        return None
+
 # --- Fungsi utama untuk menjalankan halaman ---
 
 def run():
@@ -124,38 +170,23 @@ def run():
         # --- Tampilkan Visualisasi dengan Altair ---
         st.subheader("Grafik Jumlah Unit Usaha per Jenis Industri UMKM")
         
-        # Pastikan kolom yang dibutuhkan ada untuk grafik
-        if 'Jenis' in df_umkm.columns and 'Jumlah' in df_umkm.columns:
-            # Membuat bar chart horizontal dengan Altair
-            chart = alt.Chart(df_umkm).mark_bar(
-                cornerRadiusEnd=4
-            ).encode(
-                x=alt.X('Jumlah:Q', title='Jumlah Unit Usaha'),
-                y=alt.Y('Jenis:N', sort='-x', title='Jenis Industri'), # Sortir berdasarkan Jumlah secara menurun
-                color=alt.Color('Jenis:N', legend=None), # Warna berdasarkan Jenis, tanpa legenda
-                tooltip=[
-                    alt.Tooltip('Jenis:N', title='Jenis Industri'),
-                    alt.Tooltip('Jumlah:Q', title='Jumlah')
-                ]
-            ).properties(
-                title='Jumlah Unit Usaha per Jenis Industri UMKM'
-            )
+        chart_obj = get_umkm_chart() # Panggil fungsi pembuat grafik
+        if chart_obj:
+            st.altair_chart(chart_obj, use_container_width=True)
 
-            # Menambahkan label angka di ujung setiap bar
-            text = chart.mark_text(
-                align='left',
-                baseline='middle',
-                dx=3 # Jarak label dari batang
-            ).encode(
-                x='Jumlah:Q',
-                y=alt.Y('Jenis:N', sort='-x'),
-                text=alt.Text('Jumlah:Q', format='.0f') # Format angka tanpa desimal
+            st.markdown(
+                """
+                <div style="background-color:#e6f3ff; padding: 10px; border-radius: 5px;">
+                    <p style="font-size: 14px; color: #333;">
+                        Grafik ini menunjukkan jumlah unit usaha berdasarkan jenis industri UMKM.
+                        Data ini penting untuk pengembangan ekonomi lokal dan dukungan UMKM.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True
             )
-
-            final_chart = chart + text # Gabungkan bar chart dan label
-            st.altair_chart(final_chart, use_container_width=True)
         else:
-            st.warning("Kolom 'Jenis' atau 'Jumlah' tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+            st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
 
         # --- Siapkan Data dan Tombol Download ---
         df_excel = to_excel(df_umkm) # df_umkm sudah dimuat dari GSheet

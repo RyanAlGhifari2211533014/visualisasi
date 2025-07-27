@@ -17,7 +17,7 @@ WORKSHEET_NAME_INDUSTRI_UMKM = "Jumlah Industri UMKM"
 WORKSHEET_NAME_KK_RW = "Jumlah KK Menurut RW"
 WORKSHEET_NAME_STATUS_PEKERJA = "Jumlah Penduduk (status Pekerja)"
 WORKSHEET_NAME_DISABILITAS = "Penduduk Disabilitas"
-WORKSHEET_NAME_PENDUDUK_JENIS_KELAMIN = "Penduduk Menurut Jenis Kelamin"
+WORKSHEET_NAME_JENIS_KELAMIN = "Penduduk Menurut Jenis Kelamin"
 WORKSHEET_NAME_SARANA_PRASARANA = "Sarana dan Prasarana"
 WORKSHEET_NAME_SARANA_KEBERSIHAN = "Sarana Kebersihan"
 WORKSHEET_NAME_TENAGA_KERJA = "Tenaga Kerja"
@@ -343,7 +343,7 @@ def load_status_pekerja_data_gsheet():
     # df = df.sort_values(by='Jumlah', ascending=False).reset_index(drop=True)
     return df
 
-    # --- FUNGSI BARU: Memuat Data Penduduk Disabilitas dari Google Sheet ---
+# --- FUNGSI BARU: Memuat Data Penduduk Disabilitas dari Google Sheet ---
 @st.cache_data(ttl=60)
 def load_disabilitas_data_gsheet():
     """
@@ -388,56 +388,61 @@ def load_disabilitas_data_gsheet():
 
 # --- FUNGSI: Memuat Data Penduduk Menurut Jenis Kelamin dari Google Sheet ---
 @st.cache_data(ttl=60)
-def load_penduduk_jenis_kelamin_from_gsheet():
+def load_penduduk_jenis_kelamin_gsheet(): # Nama fungsi disesuaikan agar konsisten dengan konvensi load_..._gsheet()
     """
     Memuat dan memproses data penduduk menurut jenis kelamin dari Google Sheet.
 
     Worksheet yang digunakan: 'Penduduk Menurut Jenis Kelamin'
     Wajib memiliki kolom: 'NO', 'RW', 'RT', 'JUMLAH KK', 'LAKI- LAKI', 'PEREMPUAN', 'JUMLAH PENDUDUK'
     """
-    df = load_data_from_gsheets(WORKSHEET_NAME_PENDUDUK_JENIS_KELAMIN)
-    if not df.empty:
-        df.columns = df.columns.str.strip() # Membersihkan spasi di awal/akhir nama kolom
+    # Pastikan WORKSHEET_NAME_JENIS_KELAMIN sudah didefinisikan di bagian atas data_loader.py
+    # Contoh: WORKSHEET_NAME_JENIS_KELAMIN = "Penduduk Menurut Jenis Kelamin"
+    df = load_data_from_gsheets(WORKSHEET_NAME_JENIS_KELAMIN) # Menggunakan nama konstanta yang benar
+    if df.empty:
+        return pd.DataFrame()
 
-        required_columns = [
-            'NO',
-            'RW',
-            'RT',
-            'JUMLAH KK',
-            'LAKI- LAKI', # Harus persis seperti di Google Sheet Anda
-            'PEREMPUAN',
-            'JUMLAH PENDUDUK'
-        ]
-        if not all(col in df.columns for col in required_columns):
-            missing_cols = [col for col in required_columns if col not in df.columns]
-            st.error(f"Kolom yang diperlukan tidak ditemukan di worksheet '{WORKSHEET_NAME_PENDUDUK_JENIS_KELAMIN}'. "
-                     f"Kolom yang hilang: {missing_cols}. "
-                     f"Pastikan nama kolom di Google Sheet sudah benar (perhatikan kapitalisasi dan spasi).")
-            return pd.DataFrame()
+    df.columns = df.columns.str.strip() # Membersihkan spasi di awal/akhir nama kolom
 
-        # Konversi kolom numerik
-        for col in ['NO', 'RW', 'RT', 'JUMLAH KK', 'LAKI- LAKI', 'PEREMPUAN', 'JUMLAH PENDUDUK']:
-            df[col] = pd.to_numeric(df[col], errors='coerce')
-        
-        df.dropna(subset=['JUMLAH PENDUDUK'], inplace=True)
+    required_columns = [
+        'NO',
+        'RW',
+        'RT',
+        'JUMLAH KK',
+        'LAKI- LAKI', # Harus persis seperti di Google Sheet Anda
+        'PEREMPUAN',
+        'JUMLAH PENDUDUK'
+    ]
+    if not all(col in df.columns for col in required_columns):
+        missing_cols = [col for col in required_columns if col not in df.columns]
+        st.error(f"Kolom yang diperlukan tidak ditemukan di worksheet '{WORKSHEET_NAME_JENIS_KELAMIN}'. "
+                 f"Kolom yang hilang: {missing_cols}. "
+                 f"Pastikan nama kolom di Google Sheet sudah benar (perhatikan kapitalisasi dan spasi).")
+        return pd.DataFrame()
 
-        # --- PERBAIKAN STANDARISASI NAMA KOLOM UNTUK ALTAR DAN PENGGUNAAN LAIN ---
-        # Buat salinan DataFrame untuk menghindari SettingWithCopyWarning
-        df_processed = df.copy()
+    # Konversi kolom numerik
+    for col in ['NO', 'RW', 'RT', 'JUMLAH KK', 'LAKI- LAKI', 'PEREMPUAN', 'JUMLAH PENDUDUK']:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    
+    df.dropna(subset=['JUMLAH PENDUDUK'], inplace=True) # Hapus baris dengan NaN di kolom 'JUMLAH PENDUDUK'
 
-        # Ubah nama kolom secara eksplisit agar konsisten dan mudah diakses
-        df_processed.rename(columns={
-            'NO': 'No',
-            'JUMLAH KK': 'Jumlah_KK',
-            'LAKI- LAKI': 'LAKI_LAKI', # Ini akan mengatasi spasi di tengah
-            'JUMLAH PENDUDUK': 'Jumlah_Penduduk'
-        }, inplace=True)
-        
-        # Tambahkan kolom gabungan RT-RW langsung di data loader
-        # Ini akan memastikan 'RT_RW' selalu tersedia
-        df_processed['RT_RW'] = df_processed['RT'].astype(str) + '-' + df_processed['RW'].astype(str)
+    # --- PERBAIKAN STANDARISASI NAMA KOLOM UNTUK ALTAIR DAN PENGGUNAAN LAIN ---
+    # Buat salinan DataFrame untuk menghindari SettingWithCopyWarning
+    df_processed = df.copy()
 
-        df_processed = df_processed.sort_values(by=['RW', 'RT']).reset_index(drop=True)
+    # Ubah nama kolom secara eksplisit agar konsisten dan mudah diakses
+    df_processed.rename(columns={
+        'NO': 'No',
+        'JUMLAH KK': 'Jumlah_KK',
+        'LAKI- LAKI': 'LAKI_LAKI', # Ini akan mengatasi spasi di tengah
+        'PEREMPUAN': 'PEREMPUAN', # Pastikan nama ini juga standar jika ada spasi atau karakter khusus
+        'JUMLAH PENDUDUK': 'Jumlah_Penduduk'
+    }, inplace=True)
+    
+    # Tambahkan kolom gabungan RW-RT (sesuai yang diharapkan di pages/penduduk_menurut_jenis_kelamin.py)
+    # Pastikan kolom 'RW' dan 'RT' sudah dikonversi ke string jika perlu
+    df_processed['RW_RT'] = df_processed['RW'].astype(str) + '-' + df_processed['RT'].astype(str)
+
+    df_processed = df_processed.sort_values(by=['RW', 'RT']).reset_index(drop=True)
     return df_processed
 
 # --- FUNGSI: Memuat Data Sarana dan Prasarana dari Google Sheet ---

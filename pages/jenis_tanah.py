@@ -109,6 +109,69 @@ def df_to_pdf(df: pd.DataFrame):
 
     return bytes(pdf.output())
 
+# --- FUNGSI BARU: Mendapatkan Objek Grafik untuk Halaman ini ---
+def get_jenis_tanah_chart():
+    """
+    Membuat dan mengembalikan objek grafik Altair untuk Jenis Tanah.
+    """
+    df_tanah = load_jenis_tanah_gsheet()
+
+    if df_tanah.empty:
+        st.info("Data tidak tersedia untuk grafik ini.")
+        return None
+
+    # Kolom-kolom jenis tanah yang akan divisualisasikan
+    land_cols = [
+        'Tanah Sawah (Ha)', 'Tanah Kering (Ha)', 'Tanah Basah (Ha)',
+        'Tanah Perkebunan (Ha)', 'Tanah Fasilitas Umum (Ha)', 'Tanah Hutan (Ha)'
+    ]
+    
+    # Pastikan kolom-kolom ini ada di DataFrame
+    existing_land_cols = [col for col in land_cols if col in df_tanah.columns]
+
+    if existing_land_cols:
+        # Melt DataFrame untuk format yang cocok dengan bar chart Altair
+        # Mengambil hanya baris pertama (data terbaru) atau rata-rata jika ada banyak baris per jenis tanah
+        # Asumsi data per jenis tanah adalah satu baris per tanggal, kita ambil yang terbaru
+        df_melted = df_tanah[existing_land_cols].iloc[0:1].melt(var_name='Jenis Tanah', value_name='Luas (Ha)')
+        
+        # Membersihkan nama jenis tanah (menghilangkan ' (Ha)')
+        df_melted['Jenis Tanah'] = df_melted['Jenis Tanah'].str.replace(' \(Ha\)', '', regex=True)
+        
+        # Sortir data untuk visualisasi
+        df_melted_sorted = df_melted.sort_values('Luas (Ha)', ascending=False)
+
+        chart = alt.Chart(df_melted_sorted).mark_bar(
+            cornerRadiusEnd=4
+        ).encode(
+            x=alt.X('Luas (Ha):Q', title='Luas (Hektar)'),
+            y=alt.Y('Jenis Tanah:N', sort='-x', title='Jenis Tanah'),
+            color=alt.Color('Jenis Tanah:N', legend=None),
+            tooltip=[
+                alt.Tooltip('Jenis Tanah:N', title='Jenis Tanah'),
+                alt.Tooltip('Luas (Ha):Q', format='.2f', title='Luas (Ha)') # Format 2 desimal
+            ]
+        ).properties(
+            title='Perbandingan Luas Berbagai Jenis Tanah'
+        )
+
+        # Menambahkan label angka di ujung bar
+        text = chart.mark_text(
+            align='left',
+            baseline='middle',
+            dx=3 # Jarak label dari batang
+        ).encode(
+            x='Luas (Ha):Q',
+            y=alt.Y('Jenis Tanah:N', sort='-x'),
+            text=alt.Text('Luas (Ha):Q', format='.2f') # Format 2 desimal
+        )
+
+        final_chart = chart + text
+        return final_chart
+    else:
+        st.warning("Kolom jenis tanah yang diperlukan tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+        return None
+
 # --- Fungsi utama untuk menjalankan halaman ---
 
 def run():
@@ -130,56 +193,23 @@ def run():
         # --- Tampilkan Visualisasi dengan Altair ---
         st.subheader("Grafik Perbandingan Luas Berbagai Jenis Tanah")
         
-        # Kolom-kolom jenis tanah yang akan divisualisasikan
-        land_cols = [
-            'Tanah Sawah (Ha)', 'Tanah Kering (Ha)', 'Tanah Basah (Ha)',
-            'Tanah Perkebunan (Ha)', 'Tanah Fasilitas Umum (Ha)', 'Tanah Hutan (Ha)'
-        ]
-        
-        # Pastikan kolom-kolom ini ada di DataFrame
-        existing_land_cols = [col for col in land_cols if col in df_tanah.columns]
+        chart_obj = get_jenis_tanah_chart() # Panggil fungsi pembuat grafik
+        if chart_obj:
+            st.altair_chart(chart_obj, use_container_width=True)
 
-        if existing_land_cols:
-            # Melt DataFrame untuk format yang cocok dengan bar chart Altair
-            # Mengambil hanya baris pertama (data terbaru) atau rata-rata jika ada banyak baris per jenis tanah
-            # Asumsi data per jenis tanah adalah satu baris per tanggal, kita ambil yang terbaru
-            df_melted = df_tanah[existing_land_cols].iloc[0:1].melt(var_name='Jenis Tanah', value_name='Luas (Ha)')
-            
-            # Membersihkan nama jenis tanah (menghilangkan ' (Ha)')
-            df_melted['Jenis Tanah'] = df_melted['Jenis Tanah'].str.replace(' \(Ha\)', '', regex=True)
-            
-            # Sortir data untuk visualisasi
-            df_melted_sorted = df_melted.sort_values('Luas (Ha)', ascending=False)
-
-            chart = alt.Chart(df_melted_sorted).mark_bar(
-                cornerRadiusEnd=4
-            ).encode(
-                x=alt.X('Luas (Ha):Q', title='Luas (Hektar)'),
-                y=alt.Y('Jenis Tanah:N', sort='-x', title='Jenis Tanah'),
-                color=alt.Color('Jenis Tanah:N', legend=None),
-                tooltip=[
-                    alt.Tooltip('Jenis Tanah:N', title='Jenis Tanah'),
-                    alt.Tooltip('Luas (Ha):Q', format='.2f', title='Luas (Ha)') # Format 2 desimal
-                ]
-            ).properties(
-                title='Perbandingan Luas Berbagai Jenis Tanah'
+            st.markdown(
+                """
+                <div style="background-color:#e6f3ff; padding: 10px; border-radius: 5px;">
+                    <p style="font-size: 14px; color: #333;">
+                        Grafik ini menunjukkan perbandingan luas berbagai jenis tanah di kelurahan.
+                        Data ini penting untuk perencanaan tata ruang dan pengelolaan sumber daya.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True
             )
-
-            # Menambahkan label angka di ujung bar
-            text = chart.mark_text(
-                align='left',
-                baseline='middle',
-                dx=3 # Jarak label dari batang
-            ).encode(
-                x='Luas (Ha):Q',
-                y=alt.Y('Jenis Tanah:N', sort='-x'),
-                text=alt.Text('Luas (Ha):Q', format='.2f') # Format 2 desimal
-            )
-
-            final_chart = chart + text
-            st.altair_chart(final_chart, use_container_width=True)
         else:
-            st.warning("Kolom jenis tanah yang diperlukan tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+            st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
 
         # --- Siapkan Data dan Tombol Download ---
         df_excel = to_excel(df_tanah) # df_tanah sudah dimuat dari GSheet

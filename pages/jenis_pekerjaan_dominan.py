@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
-import matplotlib.pyplot as plt
-import seaborn as sns
+import altair as alt # Impor Altair
+# Hapus matplotlib.pyplot dan seaborn karena akan menggunakan Altair
+# import matplotlib.pyplot as plt
+# import seaborn as sns
 import io
 from fpdf import FPDF # Pastikan 'fpdf2' terinstal.
 
@@ -107,6 +108,51 @@ def df_to_pdf(df: pd.DataFrame):
 
     return bytes(pdf.output())
 
+# --- FUNGSI BARU: Mendapatkan Objek Grafik untuk Halaman ini ---
+def get_jenis_pekerjaan_chart():
+    """
+    Membuat dan mengembalikan objek grafik Altair untuk Jenis Pekerjaan Dominan.
+    """
+    df_pekerjaan = load_jenis_pekerjaan_dominan_gsheet()
+
+    if df_pekerjaan.empty:
+        st.info("Data tidak tersedia untuk grafik ini.")
+        return None
+    
+    # Pastikan kolom yang dibutuhkan ada untuk grafik
+    if 'Jenis Pekerjaan' in df_pekerjaan.columns and 'Jumlah' in df_pekerjaan.columns:
+        # Membuat bar chart horizontal dengan Altair
+        chart = alt.Chart(df_pekerjaan).mark_bar(
+            cornerRadiusEnd=4
+        ).encode(
+            x=alt.X('Jumlah:Q', title='Jumlah Unit Usaha'),
+            y=alt.Y('Jenis Pekerjaan:N', sort='-x', title='Jenis Industri'), # Sortir berdasarkan Jumlah secara menurun
+            color=alt.Color('Jenis Pekerjaan:N', legend=None), # Warna berdasarkan Jenis, tanpa legenda
+            tooltip=[
+                alt.Tooltip('Jenis Pekerjaan:N', title='Jenis Industri'),
+                alt.Tooltip('Jumlah:Q', title='Jumlah', format='.0f') # Format angka tanpa desimal
+            ]
+        ).properties(
+            title='Jumlah Unit Usaha per Jenis Industri UMKM'
+        )
+
+        # Menambahkan label angka di ujung setiap bar
+        text = chart.mark_text(
+            align='left',
+            baseline='middle',
+            dx=3 # Jarak label dari batang
+        ).encode(
+            x='Jumlah:Q',
+            y=alt.Y('Jenis Pekerjaan:N', sort='-x'),
+            text=alt.Text('Jumlah:Q', format='.0f') # Format angka tanpa desimal
+        )
+
+        final_chart = chart + text # Gabungkan bar chart dan label
+        return final_chart
+    else:
+        st.warning("Kolom 'Jenis Pekerjaan' atau 'Jumlah' tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+        return None
+
 # --- Fungsi utama untuk menjalankan halaman ---
 
 def run():
@@ -121,7 +167,6 @@ def run():
     if not df_pekerjaan.empty:
         # --- Tampilkan Tabel Data (tanpa kolom Tanggal) ---
         st.subheader("Tabel Rincian Jenis Pekerjaan Dominan")
-        # Buat DataFrame untuk tampilan yang tidak menyertakan 'Tanggal'
         df_display = df_pekerjaan.drop(columns=['Tanggal'], errors='ignore')
         st.dataframe(df_display, use_container_width=True)
         st.markdown("---")
@@ -129,26 +174,23 @@ def run():
         # --- Tampilkan Visualisasi ---
         st.subheader("Grafik Distribusi Jenis Pekerjaan Dominan")
         
-        # Pastikan kolom yang dibutuhkan ada untuk grafik
-        if 'Jenis Pekerjaan' in df_pekerjaan.columns and 'Jumlah' in df_pekerjaan.columns:
-            # Membuat grafik batang horizontal
-            fig, ax = plt.subplots(figsize=(10, max(6, len(df_pekerjaan) * 0.5))) # Sesuaikan tinggi grafik
-            sns.set_style("whitegrid")
-            
-            sns.barplot(x='Jumlah', y='Jenis Pekerjaan', data=df_pekerjaan.sort_values(by='Jumlah', ascending=False), ax=ax, orient='h', palette='magma')
-            
-            ax.set_xlabel('Jumlah Orang', fontsize=12)
-            ax.set_ylabel('Jenis Pekerjaan', fontsize=12)
-            ax.set_title('Distribusi Jenis Pekerjaan Dominan', fontsize=14, pad=20)
-            
-            # Menambahkan label angka di ujung setiap bar
-            for index, value in enumerate(df_pekerjaan.sort_values(by='Jumlah', ascending=False)['Jumlah']):
-                ax.text(value, index, f' {value}', va='center', fontsize=10)
-                
-            plt.tight_layout()
-            st.pyplot(fig)
+        chart_obj = get_jenis_pekerjaan_chart() # Panggil fungsi pembuat grafik
+        if chart_obj:
+            st.altair_chart(chart_obj, use_container_width=True)
+
+            st.markdown(
+                """
+                <div style="background-color:#e6f3ff; padding: 10px; border-radius: 5px;">
+                    <p style="font-size: 14px; color: #333;">
+                        Grafik ini menunjukkan jenis pekerjaan yang paling dominan di kelurahan.
+                        Data ini dapat membantu dalam perencanaan program pelatihan atau pengembangan ekonomi lokal.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
         else:
-            st.warning("Kolom 'Jenis Pekerjaan' atau 'Jumlah' tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+            st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
 
         # --- Siapkan Data dan Tombol Download ---
         # Data untuk Excel dan PDF sudah difilter agar tidak menyertakan kolom 'Tanggal'

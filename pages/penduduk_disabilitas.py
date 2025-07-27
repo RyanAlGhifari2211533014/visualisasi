@@ -104,6 +104,70 @@ def df_to_pdf(df: pd.DataFrame):
 
     return bytes(pdf.output())
 
+# --- FUNGSI BARU: Mendapatkan Objek Grafik untuk Halaman ini ---
+def get_disabilitas_chart():
+    """
+    Membuat dan mengembalikan objek grafik Altair untuk Penduduk Disabilitas.
+    """
+    df_disabilitas = load_disabilitas_data_gsheet()
+
+    if df_disabilitas.empty:
+        st.info("Data tidak tersedia untuk grafik ini.")
+        return None
+    
+    # Kolom-kolom yang akan divisualisasikan
+    gender_cols = ['Laki-Laki (orang)', 'Perempuan (orang)']
+    
+    # Pastikan kolom 'Jenis Cacat' dan kolom gender ada
+    if 'Jenis Cacat' in df_disabilitas.columns and all(col in df_disabilitas.columns for col in gender_cols):
+        # Ubah data menjadi format long agar bisa divisualisasikan
+        df_melted = df_disabilitas.melt(
+            id_vars=['Jenis Cacat'],
+            value_vars=gender_cols,
+            var_name='Jenis Kelamin',
+            value_name='Jumlah'
+        )
+
+        # Ganti nama kolom agar lebih user-friendly
+        df_melted['Jenis Kelamin'] = df_melted['Jenis Kelamin'].replace({
+            'Laki-Laki (orang)': 'Laki-laki',
+            'Perempuan (orang)': 'Perempuan'
+        })
+
+        # Buat bar chart vertikal dengan offset agar bar laki-laki & perempuan terpisah
+        chart = alt.Chart(df_melted).mark_bar().encode(
+            x=alt.X('Jenis Cacat:N', title='Jenis Disabilitas', axis=alt.Axis(labelAngle=-45)),
+            y=alt.Y('Jumlah:Q', title='Jumlah Orang'),
+            color=alt.Color('Jenis Kelamin:N', title='Jenis Kelamin', scale=alt.Scale(range=['#1f77b4', '#ff7f0e'])), # Warna untuk Laki-laki/Perempuan
+            xOffset='Jenis Kelamin:N', # Offset untuk memisahkan bar
+            tooltip=[
+                alt.Tooltip('Jenis Cacat:N', title='Jenis Disabilitas'),
+                alt.Tooltip('Jenis Kelamin:N', title='Jenis Kelamin'),
+                alt.Tooltip('Jumlah:Q', title='Jumlah', format='.0f') # Format tanpa desimal
+            ]
+        ).properties(
+            title='Jumlah Penyandang Disabilitas Berdasarkan Jenis Kelamin (Bar Terpisah)'
+        )
+
+        # Menambahkan label angka di atas setiap bar
+        text = chart.mark_text(
+            align='center',
+            baseline='bottom',
+            dy=-5 # Jarak label dari batang
+        ).encode(
+            text=alt.Text('Jumlah:Q', format='.0f'),
+            x=alt.X('Jenis Cacat:N'),
+            y=alt.Y('Jumlah:Q'),
+            color=alt.value("black"), # Warna teks
+            xOffset='Jenis Kelamin:N'
+        )
+
+        final_chart = chart + text
+        return final_chart
+    else:
+        st.warning("Kolom yang diperlukan ('Jenis Cacat', 'Laki-Laki (orang)', 'Perempuan (orang)') tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+        return None
+
 # --- Fungsi utama untuk menjalankan halaman ---
 
 def run():
@@ -125,57 +189,23 @@ def run():
         # --- Tampilkan Visualisasi dengan Altair ---
         st.subheader("Grafik Jumlah Penyandang Disabilitas Berdasarkan Jenis Kelamin")
         
-        # Kolom-kolom yang akan divisualisasikan
-        gender_cols = ['Laki-Laki (orang)', 'Perempuan (orang)']
-        
-        # Pastikan kolom 'Jenis Cacat' dan kolom gender ada
-        if 'Jenis Cacat' in df_disabilitas.columns and all(col in df_disabilitas.columns for col in gender_cols):
-            # Ubah data menjadi format long agar bisa divisualisasikan
-            df_melted = df_disabilitas.melt(
-                id_vars=['Jenis Cacat'],
-                value_vars=gender_cols,
-                var_name='Jenis Kelamin',
-                value_name='Jumlah'
+        chart_obj = get_disabilitas_chart() # Panggil fungsi pembuat grafik
+        if chart_obj:
+            st.altair_chart(chart_obj, use_container_width=True)
+
+            st.markdown(
+                """
+                <div style="background-color:#e6f3ff; padding: 10px; border-radius: 5px;">
+                    <p style="font-size: 14px; color: #333;">
+                        Grafik ini menunjukkan jumlah penyandang disabilitas berdasarkan jenis cacat dan jenis kelamin.
+                        Data ini penting untuk perencanaan program inklusi dan dukungan.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True
             )
-
-            # Ganti nama kolom agar lebih user-friendly
-            df_melted['Jenis Kelamin'] = df_melted['Jenis Kelamin'].replace({
-                'Laki-Laki (orang)': 'Laki-laki',
-                'Perempuan (orang)': 'Perempuan'
-            })
-
-            # Buat bar chart vertikal dengan offset agar bar laki-laki & perempuan terpisah
-            chart = alt.Chart(df_melted).mark_bar().encode(
-                x=alt.X('Jenis Cacat:N', title='Jenis Disabilitas', axis=alt.Axis(labelAngle=-45)),
-                y=alt.Y('Jumlah:Q', title='Jumlah Orang'),
-                color=alt.Color('Jenis Kelamin:N', title='Jenis Kelamin', scale=alt.Scale(range=['#1f77b4', '#ff7f0e'])), # Warna untuk Laki-laki/Perempuan
-                xOffset='Jenis Kelamin:N', # Offset untuk memisahkan bar
-                tooltip=[
-                    alt.Tooltip('Jenis Cacat:N', title='Jenis Disabilitas'),
-                    alt.Tooltip('Jenis Kelamin:N', title='Jenis Kelamin'),
-                    alt.Tooltip('Jumlah:Q', title='Jumlah', format='.0f') # Format tanpa desimal
-                ]
-            ).properties(
-                title='Jumlah Penyandang Disabilitas Berdasarkan Jenis Kelamin (Bar Terpisah)'
-            )
-
-            # Menambahkan label angka di atas setiap bar
-            text = chart.mark_text(
-                align='center',
-                baseline='bottom',
-                dy=-5 # Jarak label dari batang
-            ).encode(
-                text=alt.Text('Jumlah:Q', format='.0f'),
-                x=alt.X('Jenis Cacat:N'),
-                y=alt.Y('Jumlah:Q'),
-                color=alt.value("black"), # Warna teks
-                xOffset='Jenis Kelamin:N'
-            )
-
-            final_chart = chart + text
-            st.altair_chart(final_chart, use_container_width=True)
         else:
-            st.warning("Kolom yang diperlukan ('Jenis Cacat', 'Laki-Laki (orang)', 'Perempuan (orang)') tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+            st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
 
         # --- Siapkan Data dan Tombol Download ---
         df_excel = to_excel(df_disabilitas) # df_disabilitas sudah dimuat dari GSheet

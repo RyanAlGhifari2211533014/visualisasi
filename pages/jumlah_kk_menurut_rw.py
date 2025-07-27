@@ -102,6 +102,53 @@ def df_to_pdf(df: pd.DataFrame):
 
     return bytes(pdf.output())
 
+# --- FUNGSI BARU: Mendapatkan Objek Grafik untuk Halaman ini ---
+def get_kk_rw_chart():
+    """
+    Membuat dan mengembalikan objek grafik Altair untuk Jumlah KK Menurut RW.
+    """
+    df_kk_rw = load_kk_rw_data_gsheet()
+
+    if df_kk_rw.empty:
+        st.info("Data tidak tersedia untuk grafik ini.")
+        return None
+    
+    # Pastikan kolom yang dibutuhkan ada untuk grafik
+    if 'RW' in df_kk_rw.columns and 'JUMLAH KK' in df_kk_rw.columns:
+        # Mengurutkan data berdasarkan 'JUMLAH KK'
+        df_sorted = df_kk_rw.sort_values('JUMLAH KK', ascending=False)
+
+        chart = alt.Chart(df_sorted).mark_bar(
+            cornerRadiusEnd=4
+        ).encode(
+            x=alt.X('JUMLAH KK:Q', title='Jumlah Kepala Keluarga (KK)'),
+            y=alt.Y('RW:N', sort='-x', title='Wilayah RW'), # Sortir berdasarkan Jumlah KK secara menurun
+            color=alt.Color('RW:N', legend=None), # Warna berdasarkan RW, tanpa legenda
+            tooltip=[
+                alt.Tooltip('RW:N', title='Wilayah RW'),
+                alt.Tooltip('JUMLAH KK:Q', title='Jumlah KK', format='.0f') # Format angka tanpa desimal
+            ]
+        ).properties(
+            title='Perbandingan Jumlah Kepala Keluarga (KK) per RW'
+        )
+
+        # Menambahkan label angka di ujung setiap bar
+        text = chart.mark_text(
+            align='left',
+            baseline='middle',
+            dx=3 # Jarak label dari batang
+        ).encode(
+            x='JUMLAH KK:Q',
+            y=alt.Y('RW:N', sort='-x'),
+            text=alt.Text('JUMLAH KK:Q', format='.0f') # Format angka tanpa desimal
+        )
+
+        final_chart = chart + text # Gabungkan bar chart dan label
+        return final_chart
+    else:
+        st.warning("Kolom 'RW' atau 'JUMLAH KK' tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+        return None
+
 # --- Fungsi utama untuk menjalankan halaman ---
 
 def run():
@@ -123,40 +170,23 @@ def run():
         # --- Tampilkan Visualisasi dengan Altair ---
         st.subheader("Grafik Perbandingan Jumlah Kepala Keluarga (KK) per RW")
         
-        # Pastikan kolom yang dibutuhkan ada untuk grafik
-        if 'RW' in df_kk_rw.columns and 'JUMLAH KK' in df_kk_rw.columns:
-            # Mengurutkan data berdasarkan 'JUMLAH KK'
-            df_sorted = df_kk_rw.sort_values('JUMLAH KK', ascending=False)
+        chart_obj = get_kk_rw_chart() # Panggil fungsi pembuat grafik
+        if chart_obj:
+            st.altair_chart(chart_obj, use_container_width=True)
 
-            chart = alt.Chart(df_sorted).mark_bar(
-                cornerRadiusEnd=4
-            ).encode(
-                x=alt.X('JUMLAH KK:Q', title='Jumlah Kepala Keluarga (KK)'),
-                y=alt.Y('RW:N', sort='-x', title='Wilayah RW'), # Sortir berdasarkan Jumlah KK secara menurun
-                color=alt.Color('RW:N', legend=None), # Warna berdasarkan RW, tanpa legenda
-                tooltip=[
-                    alt.Tooltip('RW:N', title='Wilayah RW'),
-                    alt.Tooltip('JUMLAH KK:Q', title='Jumlah KK')
-                ]
-            ).properties(
-                title='Perbandingan Jumlah Kepala Keluarga (KK) per RW'
+            st.markdown(
+                """
+                <div style="background-color:#e6f3ff; padding: 10px; border-radius: 5px;">
+                    <p style="font-size: 14px; color: #333;">
+                        Grafik ini menunjukkan perbandingan jumlah kepala keluarga di setiap RW.
+                        Data ini penting untuk analisis demografi dan perencanaan tingkat RW.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True
             )
-
-            # Menambahkan label angka di ujung setiap bar
-            text = chart.mark_text(
-                align='left',
-                baseline='middle',
-                dx=3 # Jarak label dari batang
-            ).encode(
-                x='JUMLAH KK:Q',
-                y=alt.Y('RW:N', sort='-x'),
-                text=alt.Text('JUMLAH KK:Q', format='.0f') # Format angka tanpa desimal
-            )
-
-            final_chart = chart + text # Gabungkan bar chart dan label
-            st.altair_chart(final_chart, use_container_width=True)
         else:
-            st.warning("Kolom 'RW' atau 'JUMLAH KK' tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+            st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
 
         # --- Siapkan Data dan Tombol Download ---
         df_excel = to_excel(df_kk_rw) # df_kk_rw sudah dimuat dari GSheet

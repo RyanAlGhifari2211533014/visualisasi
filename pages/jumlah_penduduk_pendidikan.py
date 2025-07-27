@@ -2,9 +2,6 @@
 
 import streamlit as st
 import pandas as pd
-# Hapus matplotlib.pyplot dan seaborn karena akan menggunakan Altair
-# import matplotlib.pyplot as plt
-# import seaborn as sns
 import altair as alt # Impor Altair
 import io
 from fpdf import FPDF # Pastikan 'fpdf2' terinstal.
@@ -16,7 +13,6 @@ from data_loader import load_pendidikan_data_from_gsheet
 alt.data_transformers.disable_max_rows()
 
 # --- Fungsi Konversi untuk Download ---
-
 def to_excel(df: pd.DataFrame):
     """
     Mengonversi DataFrame Pandas menjadi file Excel di dalam memori.
@@ -99,6 +95,51 @@ def df_to_pdf(df: pd.DataFrame):
 
     return bytes(pdf.output())
 
+# --- FUNGSI BARU: Mendapatkan Objek Grafik untuk Halaman ini ---
+def get_pendidikan_chart():
+    """
+    Membuat dan mengembalikan objek grafik Altair untuk Jumlah Penduduk (Pendidikan).
+    """
+    df_pendidikan = load_pendidikan_data_from_gsheet()
+
+    if df_pendidikan.empty:
+        st.info("Data tidak tersedia untuk grafik ini.")
+        return None
+    
+    # Pastikan kolom yang dibutuhkan ada untuk grafik
+    if 'Pendidikan' in df_pendidikan.columns and 'Jumlah' in df_pendidikan.columns:
+        # Membuat bar chart horizontal dengan Altair
+        chart = alt.Chart(df_pendidikan).mark_bar(
+            cornerRadiusEnd=4 # Sudut bar lebih lembut di ujung
+        ).encode(
+            x=alt.X('Jumlah:Q', title='Jumlah Orang'),
+            y=alt.Y('Pendidikan:N', sort='-x', title='Tingkat Pendidikan'), # Sortir berdasarkan Jumlah secara menurun
+            color=alt.Color('Pendidikan:N', legend=None), # Warna berdasarkan Pendidikan, tanpa legenda
+            tooltip=[
+                alt.Tooltip('Pendidikan:N', title='Tingkat Pendidikan'),
+                alt.Tooltip('Jumlah:Q', title='Jumlah', format='.0f') # Format angka tanpa desimal
+            ]
+        ).properties(
+            title='Distribusi Penduduk Berdasarkan Pendidikan'
+        )
+
+        # Menambahkan label angka di ujung setiap bar
+        text = chart.mark_text(
+            align='left',
+            baseline='middle',
+            dx=3 # Jarak label dari batang
+        ).encode(
+            x='Jumlah:Q',
+            y=alt.Y('Pendidikan:N', sort='-x'),
+            text=alt.Text('Jumlah:Q', format='.0f') # Format angka tanpa desimal
+        )
+
+        final_chart = chart + text # Gabungkan bar chart dan label
+        return final_chart
+    else:
+        st.warning("Kolom 'Pendidikan' atau 'Jumlah' tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+        return None
+
 # --- Fungsi utama untuk menjalankan halaman ---
 
 def run():
@@ -120,39 +161,11 @@ def run():
         # --- Tampilkan Visualisasi dengan Altair ---
         st.subheader("Grafik Distribusi Pendidikan")
         
-        # Pastikan kolom yang dibutuhkan ada untuk grafik
-        if 'Pendidikan' in df_pendidikan.columns and 'Jumlah' in df_pendidikan.columns:
-            # Membuat bar chart horizontal dengan Altair
-            chart = alt.Chart(df_pendidikan).mark_bar(
-                cornerRadiusEnd=4 # Sudut bar lebih lembut di ujung
-            ).encode(
-                x=alt.X('Jumlah:Q', title='Jumlah Orang'),
-                y=alt.Y('Pendidikan:N', sort='-x', title='Tingkat Pendidikan'), # Sortir berdasarkan Jumlah secara menurun
-                color=alt.Color('Pendidikan:N', legend=None), # Warna berdasarkan Pendidikan, tanpa legenda
-                tooltip=[
-                    alt.Tooltip('Pendidikan:N', title='Tingkat Pendidikan'),
-                    alt.Tooltip('Jumlah:Q', title='Jumlah')
-                ]
-            ).properties(
-                title='Distribusi Penduduk Berdasarkan Pendidikan'
-            )
-
-            # Menambahkan label angka di ujung setiap bar
-            text = chart.mark_text(
-                align='left',
-                baseline='middle',
-                dx=3 # Jarak label dari batang
-            ).encode(
-                x='Jumlah:Q',
-                y=alt.Y('Pendidikan:N', sort='-x'),
-                text=alt.Text('Jumlah:Q', format='.0f') # Format angka tanpa desimal
-            )
-
-            final_chart = chart + text # Gabungkan bar chart dan label
-            st.altair_chart(final_chart, use_container_width=True)
-
+        chart_obj = get_pendidikan_chart() # Panggil fungsi pembuat grafik
+        if chart_obj:
+            st.altair_chart(chart_obj, use_container_width=True) # Tampilkan grafik di halaman ini
         else:
-            st.warning("Kolom 'Pendidikan' atau 'Jumlah' tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+            st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
 
         # --- Siapkan Data dan Tombol Download ---
         df_excel = to_excel(df_pendidikan)

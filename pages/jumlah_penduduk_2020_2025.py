@@ -6,6 +6,9 @@ from data_loader import load_penduduk_2020_from_gsheet # Impor fungsi dari data_
 import io # Diperlukan untuk BytesIO
 from fpdf import FPDF # Diperlukan untuk menghasilkan PDF. Pastikan 'fpdf2' terinstal.
 
+# Nonaktifkan batas baris Altair agar bisa memproses data besar
+alt.data_transformers.disable_max_rows()
+
 # --- Fungsi Helper untuk Konversi Data ---
 def to_excel(df):
     """
@@ -69,8 +72,7 @@ def df_to_pdf(df):
             x_current += current_col_width # Update posisi X untuk kolom berikutnya
             max_y_after_headers = max(max_y_after_headers, pdf.get_y()) # Perbarui max Y
 
-        # Perbaikan: Pindah ke baris baru setelah semua header dicetak.
-        # Menghapus pdf.ln(2) untuk mengurangi spasi antara header dan baris data pertama.
+        # Pindah ke baris baru setelah semua header dicetak.
         pdf.set_y(max_y_after_headers) 
 
 
@@ -84,7 +86,7 @@ def df_to_pdf(df):
                 header = headers[i] # Dapatkan nama header untuk kolom saat ini
                 current_col_width = col_widths.get(header, default_col_width)
                 
-                # Perbaikan: Menghilangkan ".0" untuk nilai numerik
+                # Menghilangkan ".0" untuk nilai numerik
                 formatted_data = str(data)
                 if isinstance(data, (int, float)): # Cek apakah data adalah integer atau float
                     if float(data).is_integer(): # Cek apakah nilai float adalah bilangan bulat (misal 2020.0, 2834.0)
@@ -97,7 +99,7 @@ def df_to_pdf(df):
     else:
         pdf.cell(0, 10, "Tidak ada kolom yang ditemukan.", ln=True)
 
-    # Perbaikan: Tambahkan teks sumber di bagian bawah tabel
+    # Tambahkan teks sumber di bagian bawah tabel
     # Atur posisi Y ke posisi saat ini (setelah tabel berakhir) + sedikit margin
     pdf.set_y(pdf.get_y() + 5) # Tambahkan 5mm spasi setelah tabel
     pdf.set_font("Arial", size=8) # Ukuran font lebih kecil untuk sumber
@@ -106,6 +108,37 @@ def df_to_pdf(df):
 
     return bytes(pdf.output(dest='S'))
 
+# --- FUNGSI BARU: Mendapatkan Objek Grafik untuk Halaman ini ---
+def get_penduduk_tahun_chart():
+    """
+    Membuat dan mengembalikan objek grafik Altair untuk Jumlah Penduduk (2020-2025).
+    """
+    df_penduduk = load_penduduk_2020_from_gsheet()
+
+    if df_penduduk.empty:
+        st.info("Data tidak tersedia untuk grafik ini.")
+        return None
+
+    # Pastikan nama kolom 'Tahun' dan 'Jumlah Total (orang)' ada untuk grafik
+    if 'Tahun' in df_penduduk.columns and 'Jumlah Total (orang)' in df_penduduk.columns:
+        chart = alt.Chart(df_penduduk).mark_line(point=True).encode(
+            x=alt.X('Tahun:O', title='Tahun'), # 'O' untuk data ordinal/kategorikal
+            y=alt.Y('Jumlah Total (orang):Q', title='Jumlah Penduduk'), # 'Q' untuk data kuantitatif
+            tooltip=[
+                alt.Tooltip('Tahun', title='Tahun'),
+                alt.Tooltip('Jumlah Laki-Laki (orang)', title='Laki-laki', format='.0f'),
+                alt.Tooltip('Jumlah Perempuan (orang)', title='Perempuan', format='.0f'),
+                alt.Tooltip('Jumlah Total (orang)', title='Total', format='.0f'),
+                alt.Tooltip('Jumlah Kepala Keluarga (KK)', title='Jumlah KK', format='.0f')
+            ]
+        ).properties(
+            title='Perkembangan Jumlah Penduduk 2020-2025'
+        ).interactive()
+
+        return chart
+    else:
+        st.warning("Kolom 'Tahun' atau 'Jumlah Total (orang)' tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+        return None
 
 # --- Fungsi utama untuk halaman ini ---
 def run():
@@ -114,6 +147,7 @@ def run():
 
     # Memuat data penduduk
     df_penduduk = load_penduduk_2020_from_gsheet()
+
     if not df_penduduk.empty:
         st.subheader("Data Jumlah Penduduk")
         st.dataframe(df_penduduk)
@@ -121,39 +155,22 @@ def run():
         # --- Visualisasi Data ---
         st.subheader("Tren Jumlah Penduduk dari Tahun ke Tahun")
 
-        # Pastikan nama kolom 'Tahun' dan 'Jumlah Total (orang)' ada untuk grafik
-        # Nama kolom yang dicari di sini harus sesuai dengan nama kolom di Google Sheet Anda
-        # yaitu 'Tahun' dan 'Jumlah Total (orang)' sesuai diskusi sebelumnya.
-        if 'Tahun' in df_penduduk.columns and 'Jumlah Total (orang)' in df_penduduk.columns:
-            chart = alt.Chart(df_penduduk).mark_line(point=True).encode(
-                x=alt.X('Tahun:O', title='Tahun'), # 'O' untuk data ordinal/kategorikal
-                y=alt.Y('Jumlah Total (orang):Q', title='Jumlah Penduduk'), # 'Q' untuk data kuantitatif
-                tooltip=[
-                    'Tahun',
-                    'Jumlah Laki-Laki (orang)',
-                    'Jumlah Perempuan (orang)',
-                    'Jumlah Total (orang)',
-                    'Jumlah Kepala Keluarga (KK)'
-                ]
-            ).properties(
-                title='Perkembangan Jumlah Penduduk 2020-2025'
-            ).interactive()
-
-            st.altair_chart(chart, use_container_width=True)
-
-            # st.markdown(
-            #     """
-            #     <div style="background-color:#e6f3ff; padding: 10px; border-radius: 5px;">
-            #         <p style="font-size: 14px; color: #333;">
-            #             Grafik di atas menunjukkan perubahan jumlah penduduk dari tahun ke tahun.
-            #             Data ini penting untuk analisis demografi dan perencanaan.
-            #         </p>
-            #     </div>
-            #     """,
-            #     unsafe_allow_html=True
-            # )
+        chart_obj = get_penduduk_tahun_chart() # Panggil fungsi pembuat grafik
+        if chart_obj:
+            st.altair_chart(chart_obj, use_container_width=True) # Tampilkan grafik di halaman ini
+            st.markdown(
+                """
+                <div style="background-color:#e6f3ff; padding: 10px; border-radius: 5px;">
+                    <p style="font-size: 14px; color: #333;">
+                        Grafik di atas menunjukkan perubahan jumlah penduduk dari tahun ke tahun.
+                        Data ini penting untuk analisis demografi dan perencanaan.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
         else:
-            st.warning("Kolom 'Tahun' atau 'Jumlah Total (orang)' tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
+            st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
 
         # Contoh metrik sederhana
         # Pastikan nama kolom di sini cocok dengan yang dimuat dari Google Sheet: 'Tahun', 'Jumlah Total (orang)'
@@ -161,26 +178,26 @@ def run():
             tahun_terbaru = df_penduduk['Tahun'].max()
             jumlah_terbaru = df_penduduk[df_penduduk['Tahun'] == tahun_terbaru]['Jumlah Total (orang)'].iloc[0]
 
-        #     st.markdown("---")
-        #     st.subheader("Ringkasan Data")
-        #     col1, col2 = st.columns(2)
-        #     with col1:
-        #         st.metric(label=f"Tahun Data Terakhir ({tahun_terbaru})", value=f"{jumlah_terbaru:,.0f} orang")
-        #     with col2:
-        #         # Menghitung perubahan jika ada lebih dari satu tahun data
-        #         if len(df_penduduk) > 1:
-        #             # Mencari tahun sebelumnya yang ada di data
-        #             tahun_sebelumnya_data = df_penduduk[df_penduduk['Tahun'] < tahun_terbaru]['Tahun'].max()
-        #             if pd.notna(tahun_sebelumnya_data): # Pastikan tahun sebelumnya bukan NaN
-        #                 jumlah_sebelumnya = df_penduduk[df_penduduk['Tahun'] == tahun_sebelumnya_data]['Jumlah Total (orang)'].iloc[0]
-        #                 perubahan = jumlah_terbaru - jumlah_sebelumnya
-        #                 st.metric(label=f"Perubahan dari Tahun {tahun_sebelumnya_data}", value=f"{perubahan:,.0f} orang", delta=f"{perubahan:,.0f}")
-        #             else:
-        #                 st.info("Tidak cukup data untuk menghitung perubahan dari tahun sebelumnya (tahun sebelumnya tidak ditemukan).")
-        #         else:
-        #             st.info("Tidak cukup data untuk menghitung perubahan dari tahun sebelumnya.")
+            st.markdown("---")
+            st.subheader("Ringkasan Data")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric(label=f"Tahun Data Terakhir ({tahun_terbaru})", value=f"{jumlah_terbaru:,.0f} orang")
+            with col2:
+                # Menghitung perubahan jika ada lebih dari satu tahun data
+                if len(df_penduduk) > 1:
+                    # Mencari tahun sebelumnya yang ada di data
+                    tahun_sebelumnya_data = df_penduduk[df_penduduk['Tahun'] < tahun_terbaru]['Tahun'].max()
+                    if pd.notna(tahun_sebelumnya_data): # Pastikan tahun sebelumnya bukan NaN
+                        jumlah_sebelumnya = df_penduduk[df_penduduk['Tahun'] == tahun_sebelumnya_data]['Jumlah Total (orang)'].iloc[0]
+                        perubahan = jumlah_terbaru - jumlah_sebelumnya
+                        st.metric(label=f"Perubahan dari Tahun {tahun_sebelumnya_data}", value=f"{perubahan:,.0f} orang", delta=f"{perubahan:,.0f}")
+                    else:
+                        st.info("Tidak cukup data untuk menghitung perubahan dari tahun sebelumnya (tahun sebelumnya tidak ditemukan).")
+                else:
+                    st.info("Tidak cukup data untuk menghitung perubahan dari tahun sebelumnya.")
 
-        # st.markdown("---") # Garis pemisah
+        st.markdown("---") # Garis pemisah
 
         # --- Siapkan Data dan Tombol Download ---
         df_excel = to_excel(df_penduduk)
