@@ -173,4 +173,4 @@ def run():
         st.info("Grafik Tenaga Kerja tidak tersedia atau data kosong.")
     st.markdown("---")
 
-    st.write("Dibuat oleh @TimCihuy")
+    st.write("Dibuat oleh @Tim_Cihuy")
