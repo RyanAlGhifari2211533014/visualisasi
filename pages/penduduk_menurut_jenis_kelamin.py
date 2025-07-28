@@ -123,14 +123,13 @@ def df_to_pdf(df: pd.DataFrame):
     return bytes(pdf.output())
 
 # --- FUNGSI BARU: Mendapatkan Objek Grafik untuk Halaman ini ---
-def get_penduduk_jenis_kelamin_chart(df_penduduk_jk: pd.DataFrame):
+def get_penduduk_jenis_kelamin_chart1(df_penduduk_jk: pd.DataFrame):
     """
     Membuat dan mengembalikan objek grafik Altair untuk Penduduk Menurut Jenis Kelamin.
     Menerima DataFrame sebagai argumen.
     """
     if df_penduduk_jk.empty:
         st.info("Data tidak tersedia untuk grafik ini.")
-        return None
     
     # Pastikan kolom yang dibutuhkan ada untuk grafik
     # PENTING: Gunakan nama kolom yang sudah distandarisasi oleh data_loader.py
@@ -178,51 +177,33 @@ def get_penduduk_jenis_kelamin_chart(df_penduduk_jk: pd.DataFrame):
             color=alt.value("black"), # Warna teks
             xOffset='Jenis_Kelamin:N'
         )
+        return chart
 
-        # Gabungkan bar chart dan label
-        final_chart_grouped = chart + text # Ini adalah LayerChart
-
-        # Chart Total Jumlah Penduduk per RW
-        # PENTING: Gunakan nama kolom yang sudah distandarisasi oleh data_loader.py
-        if 'RW' in df_penduduk_jk.columns and 'Jumlah_Penduduk' in df_penduduk_jk.columns:
-            chart_total_penduduk_rw = alt.Chart(df_penduduk_jk).mark_bar().encode(
-                x=alt.X('RW:N', title='RW', axis=alt.Axis(labelFontSize=12, titleFontSize=14)),
-                y=alt.Y('Jumlah_Penduduk:Q', title='Total Penduduk', axis=alt.Axis(labelFontSize=12, titleFontSize=14)), # <-- Gunakan nama kolom yang sudah direname
-                color=alt.Color('Jumlah_Penduduk:Q', scale=alt.Scale(scheme='viridis'), legend=None), # <-- Gunakan nama kolom yang sudah direname
-                tooltip=[
-                    alt.Tooltip('RW:N', title='RW'),
-                    alt.Tooltip('Jumlah_Penduduk:Q', title='Total Penduduk', format='.0f'), # <-- Gunakan nama kolom yang sudah direname
-                    alt.Tooltip('Jumlah_KK:Q', title='Jumlah KK', format='.0f') # <-- Gunakan nama kolom yang sudah direname
-                ]
-            ).properties(
-                title=alt.TitleParams(
-                    text='Distribusi Total Jumlah Penduduk per RW',
-                    fontSize=18,
-                    anchor='start'
-                ),
-                width='container',
-                height=300
-            )
-            
-            # Gabungkan kedua chart secara vertikal dan terapkan konfigurasi global di sini
-            combined_chart = alt.VConcatChart(vconcat=[final_chart_grouped, chart_total_penduduk_rw]).configure_axis(
-                grid=False
-            ).configure_view(
-                stroke=None
-            )
-            return combined_chart
-        else:
-            st.warning("Kolom 'RW' atau 'Jumlah_Penduduk' tidak ditemukan untuk visualisasi total penduduk per RW. Pastikan nama kolom di Google Sheet Anda sesuai.")
-            # Jika chart_total_penduduk_rw tidak dapat dibuat, kembalikan hanya final_chart_grouped
-            # dan terapkan konfigurasi padanya di sini.
-            return final_chart_grouped.configure_axis(
-                grid=False
-            ).configure_view(
-                stroke=None
-            )
-    else:
-        st.warning("Kolom yang diperlukan tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
-        return None
+# def get_penduduk_jenis_kelamin_chart2(df_penduduk_jk: pd.DataFrame):
+#         # Chart Total Jumlah Penduduk per RW
+#         # PENTING: Gunakan nama kolom yang sudah distandarisasi oleh data_loader.py
+#         if 'RW' in df_penduduk_jk.columns and 'Jumlah_Penduduk' in df_penduduk_jk.columns:
+#             chart_total_penduduk_rw = alt.Chart(df_penduduk_jk).mark_bar().encode(
+#                 x=alt.X('RW:N', title='RW', axis=alt.Axis(labelFontSize=12, titleFontSize=14)),
+#                 y=alt.Y('Jumlah_Penduduk:Q', title='Total Penduduk', axis=alt.Axis(labelFontSize=12, titleFontSize=14)), # <-- Gunakan nama kolom yang sudah direname
+#                 color=alt.Color('Jumlah_Penduduk:Q', scale=alt.Scale(scheme='viridis'), legend=None), # <-- Gunakan nama kolom yang sudah direname
+#                 tooltip=[
+#                     alt.Tooltip('RW:N', title='RW'),
+#                     alt.Tooltip('Jumlah_Penduduk:Q', title='Total Penduduk', format='.0f'), # <-- Gunakan nama kolom yang sudah direname
+#                     alt.Tooltip('Jumlah_KK:Q', title='Jumlah KK', format='.0f') # <-- Gunakan nama kolom yang sudah direname
+#                 ]
+#             ).properties(
+#                 title=alt.TitleParams(
+#                     text='Distribusi Total Jumlah Penduduk per RW',
+#                     fontSize=18,
+#                     anchor='start'
+#                 ),
+#                 width='container',
+#                 height=300
+#             )
+#             return  chart_total_penduduk_rw
+#         else:
+#             st.warning("Kolom 'RW' atau 'Jumlah_Penduduk' tidak ditemukan untuk visualisasi total penduduk per RW. Pastikan nama kolom di Google Sheet Anda sesuai.")
 
 # --- Fungsi utama untuk halaman ini ---
 def run():
@@ -241,22 +222,21 @@ def run():
         st.subheader("Perbandingan Jumlah Penduduk Laki-laki dan Perempuan per RT-RW")
 
         # Panggil fungsi pembuat grafik dengan DataFrame yang sudah dimuat
-        chart_obj = get_penduduk_jenis_kelamin_chart(df_penduduk_jk)
+        chart_obj = get_penduduk_jenis_kelamin_chart1(df_penduduk_jk)
         if chart_obj:
             st.altair_chart(chart_obj, use_container_width=True)
-            st.markdown(
-                """
-                <div style="background-color:#e6f3ff; padding: 10px; border-radius: 5px;">
-                    <p style="font-size: 14px; color: #333;">
-                        Grafik ini menampilkan perbandingan jumlah penduduk laki-laki dan perempuan di setiap RW-RT,
-                        serta total jumlah penduduk per RW. Data ini penting untuk analisis demografi dan perencanaan.
-                    </p>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
         else:
             st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
+
+        st.markdown("---")
+        st.subheader("Total Jumlah Penduduk per RW")
+
+        chart_obj = get_penduduk_jenis_kelamin_chart2(df_penduduk_jk)
+        if chart_obj:
+            st.altair_chart(chart_obj, use_container_width=True)
+        else:
+            st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
+
 
         # --- Tombol Download ---
         st.markdown("---")
