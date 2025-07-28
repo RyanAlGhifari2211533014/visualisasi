@@ -14,6 +14,7 @@ from pages.penduduk_disabilitas import get_disabilitas_chart
 
 # PENTING: Impor fungsi pemuat data yang diperlukan untuk grafik di home.py
 from data_loader import load_penduduk_jenis_kelamin_gsheet # <-- Pastikan baris ini ada dan benar
+from data_loader import load_tenaga_kerja_from_gsheet
 from pages.penduduk_menurut_jenis_kelamin import get_penduduk_jenis_kelamin_chart
 
 from pages.sarana_dan_prasarana import get_sarana_prasarana_chart
@@ -146,7 +147,8 @@ def run():
 
     # Grafik tenaga kerja
     st.subheader("✊ Tenaga Kerja")
-    chart_tenaga = get_tenaga_kerja_chart()
+    df = load_tenaga_kerja_from_gsheet() # <-- Baris ini memuat data
+    chart_tenaga = get_tenaga_kerja_chart(df)
     if chart_tenaga:
         st.altair_chart(chart_tenaga, use_container_width=True)
     else:
