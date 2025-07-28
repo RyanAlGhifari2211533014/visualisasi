@@ -173,18 +173,6 @@ def run():
         chart_obj = get_kk_rw_chart() # Panggil fungsi pembuat grafik
         if chart_obj:
             st.altair_chart(chart_obj, use_container_width=True)
-
-            st.markdown(
-                """
-                <div style="background-color:#e6f3ff; padding: 10px; border-radius: 5px;">
-                    <p style="font-size: 14px; color: #333;">
-                        Grafik ini menunjukkan perbandingan jumlah kepala keluarga di setiap RW.
-                        Data ini penting untuk analisis demografi dan perencanaan tingkat RW.
-                    </p>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
         else:
             st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
 

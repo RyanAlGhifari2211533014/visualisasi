@@ -5,13 +5,14 @@ import io
 from fpdf import FPDF
 
 # Import fungsi pemuat data dari data_loader
+# Pastikan file data_loader.py berada di direktori yang sama atau dapat diakses
 from data_loader import load_penduduk_jenis_kelamin_gsheet
 
 # Nonaktifkan batas baris Altair agar bisa memproses data besar
 alt.data_transformers.disable_max_rows()
 
 # --- Fungsi Helper untuk Konversi Data ---
-def to_excel(df):
+def to_excel(df: pd.DataFrame):
     """
     Mengonversi DataFrame ke format Excel (BytesIO) untuk diunduh.
     """
@@ -21,7 +22,7 @@ def to_excel(df):
     processed_data = output.getvalue()
     return processed_data
 
-def df_to_pdf(df):
+def df_to_pdf(df: pd.DataFrame):
     """
     Mengonversi DataFrame ke format PDF (BytesIO) menggunakan fpdf.
     """
@@ -34,23 +35,22 @@ def df_to_pdf(df):
     pdf.ln(5)
 
     df_for_pdf = df.copy()
-    # Kolom 'No' sudah distandarisasi di data_loader
     # Perbaikan: Pastikan kolom 'No' ditambahkan jika belum ada
     if 'No' not in df_for_pdf.columns:
         df_for_pdf.insert(0, 'No', range(1, 1 + len(df_for_pdf)))
     
     # Menentukan header yang akan ditampilkan dan lebar kolomnya
+    # Penting: Gunakan nama kolom yang sudah distandarisasi oleh data_loader.py
     headers_display = ['No', 'RW', 'RT', 'Jumlah KK', 'Laki-Laki', 'Perempuan', 'Jumlah Penduduk']
-    # Nama kolom yang sesuai di DataFrame (setelah standardisasi di data_loader)
-    # Perbaikan: Gunakan nama kolom yang sudah distandarisasi di data_loader
+    # Pemetaan nama kolom di DataFrame (setelah standardisasi di data_loader)
     headers_df_map = {
-        'No': 'NO',
+        'No': 'No', # 'No' sudah dibuat di df_for_pdf.insert
         'RW': 'RW',
         'RT': 'RT',
-        'Jumlah KK': 'Jumlah KK',
-        'Laki-Laki': 'LAKI- LAKI',
-        'Perempuan': 'PEREMPUAN',
-        'Jumlah Penduduk': 'JUMLAH PENDUDUK'
+        'Jumlah KK': 'Jumlah_KK', # Nama kolom setelah direname di data_loader
+        'Laki-Laki': 'LAKI_LAKI', # Nama kolom setelah direname di data_loader
+        'Perempuan': 'PEREMPUAN', # Nama kolom setelah direname di data_loader
+        'Jumlah Penduduk': 'Jumlah_Penduduk' # Nama kolom setelah direname di data_loader
     }
 
     col_widths = {
@@ -80,10 +80,12 @@ def df_to_pdf(df):
     pdf.set_font("Arial", "", 7) # Font untuk data, sedikit lebih kecil
     for row_index, row_data_original in df.iterrows(): # Gunakan df asli dari input fungsi
         # Buat dictionary dari row_data_original dengan nama kolom yang sudah distandarisasi
-        row_data_processed = {headers_df_map[k]: row_data_original[k] for k in headers_df_map if k in row_data_original.index}
-        
-        # Tambahkan 'No' ke row_data_processed untuk baris ini
-        row_data_processed['No'] = row_index + 1 # Nomor urut dimulai dari 1
+        row_data_for_display = {}
+        for display_header, df_column_name in headers_df_map.items():
+            if df_column_name in row_data_original.index:
+                row_data_for_display[display_header] = row_data_original[df_column_name]
+            elif display_header == 'No': # Handle 'No' column separately
+                row_data_for_display['No'] = row_index + 1
 
         if pdf.get_y() + 10 > pdf.h - 20: # Cek apakah perlu halaman baru
             pdf.add_page()
@@ -96,15 +98,12 @@ def df_to_pdf(df):
                 x_current_new_page += current_col_width
             pdf.ln(5)
 
-        y_current_row = pdf.get_y()
-        x_current_row = pdf.get_x()
-        
         # Perbaikan: Iterasi berdasarkan headers_display untuk urutan yang benar
         for header_display_name in headers_display:
-            header_df_name = headers_df_map[header_display_name] # Dapatkan nama kolom di DataFrame
             current_col_width = col_widths.get(header_display_name, 30)
 
-            data = row_data_processed.get(header_df_name, '') # Ambil data, gunakan get() untuk menghindari KeyError
+            # Ambil data dari dictionary yang sudah disiapkan
+            data = row_data_for_display.get(header_display_name, '')
             
             # Perbaikan: Menghilangkan ".0" untuk nilai numerik
             formatted_data = str(data)
@@ -124,30 +123,29 @@ def df_to_pdf(df):
     return bytes(pdf.output())
 
 # --- FUNGSI BARU: Mendapatkan Objek Grafik untuk Halaman ini ---
-def get_penduduk_jenis_kelamin_chart():
+def get_penduduk_jenis_kelamin_chart(df_penduduk_jk: pd.DataFrame):
     """
     Membuat dan mengembalikan objek grafik Altair untuk Penduduk Menurut Jenis Kelamin.
+    Menerima DataFrame sebagai argumen.
     """
-    df_penduduk_jk = load_penduduk_jenis_kelamin_gsheet()
-
     if df_penduduk_jk.empty:
         st.info("Data tidak tersedia untuk grafik ini.")
         return None
     
     # Pastikan kolom yang dibutuhkan ada untuk grafik
-    # Perbaikan: Gunakan nama kolom yang sudah distandarisasi di data_loader: 'LAKI- LAKI', 'PEREMPUAN'
-    if 'RW_RT' in df_penduduk_jk.columns and 'LAKI- LAKI' in df_penduduk_jk.columns and 'PEREMPUAN' in df_penduduk_jk.columns:
+    # PENTING: Gunakan nama kolom yang sudah distandarisasi oleh data_loader.py
+    if 'RW_RT' in df_penduduk_jk.columns and 'LAKI_LAKI' in df_penduduk_jk.columns and 'PEREMPUAN' in df_penduduk_jk.columns:
         # Melt DataFrame untuk visualisasi perbandingan jenis kelamin
         df_melted = df_penduduk_jk.melt(
             id_vars=['RW_RT'], 
-            value_vars=['LAKI- LAKI', 'PEREMPUAN'], 
+            value_vars=['LAKI_LAKI', 'PEREMPUAN'], # <-- Gunakan nama kolom yang sudah direname
             var_name='Jenis_Kelamin', 
             value_name='Jumlah'
         )
 
         # Ganti nama kolom agar lebih user-friendly di visualisasi
         df_melted['Jenis_Kelamin'] = df_melted['Jenis_Kelamin'].replace({
-            'LAKI- LAKI': 'Laki-laki',
+            'LAKI_LAKI': 'Laki-laki', # <-- Gunakan nama kolom yang sudah direname
             'PEREMPUAN': 'Perempuan'
         })
         
@@ -166,10 +164,6 @@ def get_penduduk_jenis_kelamin_chart():
             title='👥 Jumlah Penduduk Laki-laki dan Perempuan per RW-RT',
             width=700, # Bisa disesuaikan atau pakai 'container'
             height=400
-        ).configure_axis(
-            grid=False
-        ).configure_view(
-            stroke=None
         )
         
         # Menambahkan label angka di atas setiap bar
@@ -185,19 +179,20 @@ def get_penduduk_jenis_kelamin_chart():
             xOffset='Jenis_Kelamin:N'
         )
 
-        final_chart_grouped = chart + text
-        
+        # Gabungkan bar chart dan label
+        final_chart_grouped = chart + text # Ini adalah LayerChart
+
         # Chart Total Jumlah Penduduk per RW
-        # Perbaikan: Pastikan kolom 'RW' dan 'JUMLAH PENDUDUK' ada di df_penduduk_jk
-        if 'RW' in df_penduduk_jk.columns and 'JUMLAH PENDUDUK' in df_penduduk_jk.columns:
+        # PENTING: Gunakan nama kolom yang sudah distandarisasi oleh data_loader.py
+        if 'RW' in df_penduduk_jk.columns and 'Jumlah_Penduduk' in df_penduduk_jk.columns:
             chart_total_penduduk_rw = alt.Chart(df_penduduk_jk).mark_bar().encode(
                 x=alt.X('RW:N', title='RW', axis=alt.Axis(labelFontSize=12, titleFontSize=14)),
-                y=alt.Y('JUMLAH PENDUDUK:Q', title='Total Penduduk', axis=alt.Axis(labelFontSize=12, titleFontSize=14)), # Menggunakan nama standar
-                color=alt.Color('JUMLAH PENDUDUK:Q', scale=alt.Scale(scheme='viridis'), legend=None),
+                y=alt.Y('Jumlah_Penduduk:Q', title='Total Penduduk', axis=alt.Axis(labelFontSize=12, titleFontSize=14)), # <-- Gunakan nama kolom yang sudah direname
+                color=alt.Color('Jumlah_Penduduk:Q', scale=alt.Scale(scheme='viridis'), legend=None), # <-- Gunakan nama kolom yang sudah direname
                 tooltip=[
                     alt.Tooltip('RW:N', title='RW'),
-                    alt.Tooltip('JUMLAH PENDUDUK:Q', title='Total Penduduk', format='.0f'),
-                    alt.Tooltip('JUMLAH KK:Q', title='Jumlah KK', format='.0f') 
+                    alt.Tooltip('Jumlah_Penduduk:Q', title='Total Penduduk', format='.0f'), # <-- Gunakan nama kolom yang sudah direname
+                    alt.Tooltip('Jumlah_KK:Q', title='Jumlah KK', format='.0f') # <-- Gunakan nama kolom yang sudah direname
                 ]
             ).properties(
                 title=alt.TitleParams(
@@ -207,18 +202,24 @@ def get_penduduk_jenis_kelamin_chart():
                 ),
                 width='container',
                 height=300
-            ).configure_axis(
+            )
+            
+            # Gabungkan kedua chart secara vertikal dan terapkan konfigurasi global di sini
+            combined_chart = alt.VConcatChart(vconcat=[final_chart_grouped, chart_total_penduduk_rw]).configure_axis(
                 grid=False
             ).configure_view(
                 stroke=None
             )
-            # Mengembalikan kedua chart dalam layer atau sebagai list
-            # Untuk home.py, mungkin lebih baik mengembalikan satu objek layer atau VConcatChart
-            # Untuk halaman ini, kita bisa mengembalikan VConcatChart
-            return alt.VConcatChart(vconcat=[final_chart_grouped, chart_total_penduduk_rw])
+            return combined_chart
         else:
-            st.warning("Kolom 'RW' atau 'JUMLAH PENDUDUK' tidak ditemukan untuk visualisasi total penduduk per RW. Pastikan nama kolom di Google Sheet Anda sesuai.")
-            return final_chart_grouped # Tetap kembalikan chart grouped jika total tidak bisa dibuat
+            st.warning("Kolom 'RW' atau 'Jumlah_Penduduk' tidak ditemukan untuk visualisasi total penduduk per RW. Pastikan nama kolom di Google Sheet Anda sesuai.")
+            # Jika chart_total_penduduk_rw tidak dapat dibuat, kembalikan hanya final_chart_grouped
+            # dan terapkan konfigurasi padanya di sini.
+            return final_chart_grouped.configure_axis(
+                grid=False
+            ).configure_view(
+                stroke=None
+            )
     else:
         st.warning("Kolom yang diperlukan tidak ditemukan untuk visualisasi grafik. Pastikan nama kolom di Google Sheet Anda sesuai.")
         return None
@@ -228,18 +229,32 @@ def run():
     st.title("Data Penduduk Menurut Jenis Kelamin")
     st.markdown("---")
     
-    df_penduduk_jk = load_penduduk_jenis_kelamin_from_gsheet()
+    # Muat data terlebih dahulu
+    df_penduduk_jk = load_penduduk_jenis_kelamin_gsheet()
     
     if not df_penduduk_jk.empty:
         st.subheader("Tabel Data Penduduk Menurut Jenis Kelamin")
-        st.dataframe(df_penduduk_jk)
+        st.dataframe(df_penduduk_jk, use_container_width=True) # Tambahkan use_container_width
+        st.markdown("---")
 
         # --- Visualisasi Data ---
         st.subheader("Perbandingan Jumlah Penduduk Laki-laki dan Perempuan per RT-RW")
 
-        chart_obj = get_penduduk_jenis_kelamin_chart()
+        # Panggil fungsi pembuat grafik dengan DataFrame yang sudah dimuat
+        chart_obj = get_penduduk_jenis_kelamin_chart(df_penduduk_jk)
         if chart_obj:
             st.altair_chart(chart_obj, use_container_width=True)
+            st.markdown(
+                """
+                <div style="background-color:#e6f3ff; padding: 10px; border-radius: 5px;">
+                    <p style="font-size: 14px; color: #333;">
+                        Grafik ini menampilkan perbandingan jumlah penduduk laki-laki dan perempuan di setiap RW-RT,
+                        serta total jumlah penduduk per RW. Data ini penting untuk analisis demografi dan perencanaan.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
         else:
             st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
 

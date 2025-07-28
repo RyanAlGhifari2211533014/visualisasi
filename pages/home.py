@@ -11,13 +11,15 @@ from pages.jumlah_industri_umkm import get_umkm_chart
 from pages.jumlah_kk_menurut_rw import get_kk_rw_chart
 from pages.jumlah_penduduk_status_pekerja import get_status_pekerja_chart
 from pages.penduduk_disabilitas import get_disabilitas_chart
+
+# PENTING: Impor fungsi pemuat data yang diperlukan untuk grafik di home.py
+from data_loader import load_penduduk_jenis_kelamin_gsheet # <-- Pastikan baris ini ada dan benar
 from pages.penduduk_menurut_jenis_kelamin import get_penduduk_jenis_kelamin_chart
+
 from pages.sarana_dan_prasarana import get_sarana_prasarana_chart
 from pages.sarana_kebersihan import get_sarana_kebersihan_chart
 from pages.tenaga_kerja import get_tenaga_kerja_chart
 # Tambahkan impor untuk halaman lain yang ingin Anda tampilkan grafiknya di home.py
-# Contoh: from pages.penduduk_menurut_jenis_kelamin import get_penduduk_jenis_kelamin_chart
-# Contoh: from pages.sarana_prasarana import get_sarana_prasarana_chart
 # ... dan seterusnya untuk semua halaman yang relevan
 
 def run():
@@ -115,7 +117,9 @@ def run():
 
     # Grafik Jumlah Penduduk Menurut Jenis Kelamin
     st.subheader("⚧ Jumlah Penduduk Menurut Jenis Kelamin")
-    chart_kelamin = get_penduduk_jenis_kelamin_chart()
+    # Perbaikan: Muat data terlebih dahulu sebelum memanggil fungsi grafik
+    df_penduduk_jk_home = load_penduduk_jenis_kelamin_gsheet() # <-- Baris ini memuat data
+    chart_kelamin = get_penduduk_jenis_kelamin_chart(df_penduduk_jk_home) # <-- Baris ini meneruskan data
     if chart_kelamin:
         st.altair_chart(chart_kelamin, use_container_width=True)
     else:
@@ -140,7 +144,7 @@ def run():
         st.info("Grafik Sarana kebersihan tidak tersedia atau data kosong.")
     st.markdown("---")
 
- # Grafik tenaga kerja
+    # Grafik tenaga kerja
     st.subheader("✊ Tenaga Kerja")
     chart_tenaga = get_tenaga_kerja_chart()
     if chart_tenaga:

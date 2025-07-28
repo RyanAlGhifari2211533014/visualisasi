@@ -158,17 +158,6 @@ def run():
         chart_obj = get_penduduk_tahun_chart() # Panggil fungsi pembuat grafik
         if chart_obj:
             st.altair_chart(chart_obj, use_container_width=True) # Tampilkan grafik di halaman ini
-            st.markdown(
-                """
-                <div style="background-color:#e6f3ff; padding: 10px; border-radius: 5px;">
-                    <p style="font-size: 14px; color: #333;">
-                        Grafik di atas menunjukkan perubahan jumlah penduduk dari tahun ke tahun.
-                        Data ini penting untuk analisis demografi dan perencanaan.
-                    </p>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
         else:
             st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
 
