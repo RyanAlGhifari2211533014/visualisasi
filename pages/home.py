@@ -119,7 +119,7 @@ def run():
 
     st.markdown("---")
 
-    st.subheader("⚧ Jumlah Penduduk Menurut Jenis Kelamin")
+    st.subheader("♀️ /♂️ Jumlah Penduduk Menurut Jenis Kelamin")
     # Perbaikan: Muat data terlebih dahulu sebelum memanggil fungsi grafik
     df_penduduk_jk_home = load_penduduk_jenis_kelamin_gsheet() # <-- Baris ini memuat data
     chart_kelamin = get_penduduk_jenis_kelamin_chart1(df_penduduk_jk_home) # <-- Baris ini meneruskan data
