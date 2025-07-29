@@ -3,6 +3,9 @@
 # 2. Masuk ke folder proyek (contoh: cd D:\visualisasi)
 # 3. Jalankan perintah: streamlit run main.py
 
+# encodeuntuk python versi 13
+# return pdf.output(dest='S').encode('latin-1')
+
 # === PASTIKAN LIBRARY TERINSTAL ===
 # Pastikan semua library ini terinstal di lingkungan Python Anda.
 # Anda bisa menginstalnya dengan:
