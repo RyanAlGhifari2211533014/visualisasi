@@ -228,14 +228,14 @@ def run():
         else:
             st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
 
-        st.markdown("---")
-        st.subheader("Total Jumlah Penduduk per RW")
+        # st.markdown("---")
+        # st.subheader("Total Jumlah Penduduk per RW")
 
-        chart_obj = get_penduduk_jenis_kelamin_chart2(df_penduduk_jk)
-        if chart_obj:
-            st.altair_chart(chart_obj, use_container_width=True)
-        else:
-            st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
+        # chart_obj = get_penduduk_jenis_kelamin_chart2(df_penduduk_jk)
+        # if chart_obj:
+        #     st.altair_chart(chart_obj, use_container_width=True)
+        # else:
+        #     st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
 
 
         # --- Tombol Download ---

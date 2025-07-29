@@ -28,12 +28,13 @@ def run():
     """
     Renders the Home page content with summary charts.
     """
-    st.title("Selamat Datang di Dashboard SIGEMA")
+    st.title("Selamat Datang di Dashboard Kelurahan Marapalam")
     st.markdown("""
         <div style="text-align: center;">
             <p style="font-size: 1.2em;">
                 Dashboard ini menyajikan berbagai visualisasi data penting mengenai kelurahan Anda.
                 Gunakan menu di sidebar untuk menjelajahi berbagai kategori data secara detail.
+
             </p>
         </div>
     """, unsafe_allow_html=True)

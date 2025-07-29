@@ -132,3 +132,10 @@ elif selected == 'Admin': # BARU: Logika untuk opsi Admin
     st.write("Klik tombol di bawah untuk membuka Google Sheet database Anda:")
     st.markdown(f'<a href="{GOOGLE_SHEET_URL}" target="_blank"><button style="background-color:#4CAF50;color:white;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;">Buka Google Sheet Database</button></a>', unsafe_allow_html=True)
     st.info("Pastikan Anda sudah login ke akun Google yang memiliki akses ke spreadsheet ini.")
+
+elif selected == 'Peta': # BARU: Logika untuk opsi Peta
+    st.subheader("Akses Halaman Peta")
+    st.write("Klik tombol di bawah untuk membuka :")
+    st.markdown(f'<a href="https://earth.google.com/earth/d/1UDWR2S6sygquKm74PC_WlKcv2_kqZIO-?usp=sharing" target="_blank"><button style="background-color:#4CAF50;color:white;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;">Buka Peta Database</button></a>', unsafe_allow_html=True)
+    st.info("Pastikan Anda sudah login ke akun Google yang memiliki akses ke spreadsheet ini.")
+    
