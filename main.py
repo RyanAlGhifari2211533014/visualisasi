@@ -61,6 +61,8 @@ from pages import penduduk_menurut_jenis_kelamin
 from pages import sarana_dan_prasarana
 from pages import sarana_kebersihan
 from pages import tenaga_kerja
+from pages import admin
+from data_loader import GOOGLE_SHEET_URL
 # from pages import admin
 
 # === SIDEBAR NAVIGASI ===
@@ -125,5 +127,8 @@ elif selected == 'Sarana Kebersihan':
     sarana_kebersihan.run()
 elif selected == 'Tenaga Kerja':
     tenaga_kerja.run()
-# elif selected == 'Admin':
-#     admin.run()
+elif selected == 'Admin': # BARU: Logika untuk opsi Admin
+    st.subheader("Akses Halaman Admin")
+    st.write("Klik tombol di bawah untuk membuka Google Sheet database Anda:")
+    st.markdown(f'<a href="{GOOGLE_SHEET_URL}" target="_blank"><button style="background-color:#4CAF50;color:white;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;">Buka Google Sheet Database</button></a>', unsafe_allow_html=True)
+    st.info("Pastikan Anda sudah login ke akun Google yang memiliki akses ke spreadsheet ini.")
