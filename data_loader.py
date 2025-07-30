@@ -75,7 +75,7 @@ def write_data_to_gsheets(df_to_write, worksheet_name):
         st.error(f"Terjadi error saat menulis data ke Google Sheet '{worksheet_name}': {e}")
         return False
 
-# --- FUNGSI: Memuat Data Jumlah Penduduk (2020-2025) dari Google Sheet ---
+# --- FUNGSI: Memuat Data Jumlah Penduduk dari Google Sheet ---
 @st.cache_data(ttl=60)
 def load_penduduk_2020_from_gsheet():
     """

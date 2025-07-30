@@ -78,7 +78,7 @@ with st.sidebar:
         menu_title='Menu Utama', # Judul untuk menu ini
         options=[
             'Home',
-            'Jumlah Penduduk (2020-2025)',
+            'Jumlah Penduduk',
             'Jumlah Penduduk (Pendidikan)',
             'Jenis Pekerjaan Dominan', # Placeholder, perlu dibuat halamannya
             'Jenis Tanah', # Placeholder, perlu dibuat halamannya
