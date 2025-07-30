@@ -157,7 +157,7 @@ def run():
 
     if not df_sarana_kebersihan.empty:
         st.subheader("Tabel Data Sarana Kebersihan")
-        st.dataframe(df_sarana_kebersihan)
+        st.dataframe(df_sarana_kebersihan, use_container_width=True, hide_index=True)
 
         # --- Visualisasi Data ---
         st.subheader("Distribusi Sarana Kebersihan")

@@ -113,7 +113,7 @@ def run():
 
     if not df_tenaga_kerja.empty:
         st.subheader("Data Tenaga Kerja")
-        st.dataframe(df_tenaga_kerja)
+        st.dataframe(df_tenaga_kerja, use_container_width=True, hide_index=True)
 
         # --- Visualisasi Data ---
         chart_obj = get_tenaga_kerja_chart(df_tenaga_kerja)

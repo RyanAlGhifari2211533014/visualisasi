@@ -155,7 +155,11 @@ def run():
 
         # --- Tampilkan Tabel Data ---
         st.subheader("Tabel Rincian Data Pendidikan")
-        st.dataframe(df_pendidikan, use_container_width=True)
+        
+        
+        st.dataframe(df_pendidikan, use_container_width=True, hide_index=True)
+        
+        
         st.markdown("---")
 
         # --- Tampilkan Visualisasi dengan Altair ---

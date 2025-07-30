@@ -216,7 +216,7 @@ def run():
     
     if not df_penduduk_jk.empty:
         st.subheader("Tabel Data Penduduk Menurut Jenis Kelamin")
-        st.dataframe(df_penduduk_jk, use_container_width=True) # Tambahkan use_container_width
+        st.dataframe(df_penduduk_jk, use_container_width=True, hide_index=True) # Tambahkan use_container_width
         st.markdown("---")
 
         # --- Visualisasi Data ---
