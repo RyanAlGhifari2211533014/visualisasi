@@ -161,9 +161,9 @@ def run():
 
     if not df_sarana_prasarana.empty:
         st.subheader("Tabel Data Sarana dan Prasarana")
-        st.dataframe(df_sarana_prasarana)
+        st.dataframe(df_sarana_prasarana, use_container_width=True, hide_index=True)
 
-        # --- Visualisasi Data ---
+        # --- Visualisasi Data ---  
         st.subheader("Visualisasi Jumlah Sarana dan Prasarana")
 
         chart_obj = get_sarana_prasarana_chart()

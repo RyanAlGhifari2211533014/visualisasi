@@ -32,9 +32,10 @@ def run():
     st.markdown("""
         <div style="text-align: center;">
             <p style="font-size: 1.2em;">
-                Dashboard ini menyajikan berbagai visualisasi data penting mengenai kelurahan Anda.
+                Dashboard ini Diberi mana SIGEMA (Sistem Informasi Geospasial Marapalam). Halaman Dasboard ini
+                menyajikan berbagai visualisasi data penting mengenai kelurahan Marapalam.  
                 Gunakan menu di sidebar untuk menjelajahi berbagai kategori data secara detail.
-            </p>
+            
         </div>
     """, unsafe_allow_html=True)
     
