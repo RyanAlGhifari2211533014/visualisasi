@@ -111,7 +111,7 @@ def df_to_pdf(df):
 # --- FUNGSI BARU: Mendapatkan Objek Grafik untuk Halaman ini ---
 def get_penduduk_tahun_chart():
     """
-    Membuat dan mengembalikan objek grafik Altair untuk Jumlah Penduduk (2020-2025).
+    Membuat dan mengembalikan objek grafik Altair untuk Jumlah Penduduk.
     """
     df_penduduk = load_penduduk_2020_from_gsheet()
 
@@ -132,7 +132,7 @@ def get_penduduk_tahun_chart():
                 alt.Tooltip('Jumlah Kepala Keluarga (KK)', title='Jumlah KK', format='.0f')
             ]
         ).properties(
-            title='Perkembangan Jumlah Penduduk 2020-2025'
+            title='Perkembangan Jumlah Penduduk'
         ).interactive()
 
         return chart
@@ -213,7 +213,7 @@ def run():
             )
     else:
         # Pesan ini ditampilkan jika df_penduduk kosong setelah mencoba memuat data.
-        st.info("Belum ada data jumlah penduduk yang valid untuk divisualisasikan. Pastikan Google Sheet Anda dapat diakses dan memiliki data yang benar di worksheet 'Jumlah Penduduk (2020-2025)' dengan kolom 'Tahun', 'Jumlah Laki-Laki (orang)', 'Jumlah Perempuan (orang)', 'Jumlah Total (orang)', dan 'Jumlah Kepala Keluarga (KK)'.")
+        st.info("Belum ada data jumlah penduduk yang valid untuk divisualisasikan. Pastikan Google Sheet Anda dapat diakses dan memiliki data yang benar di worksheet 'Jumlah Penduduk' dengan kolom 'Tahun', 'Jumlah Laki-Laki (orang)', 'Jumlah Perempuan (orang)', 'Jumlah Total (orang)', dan 'Jumlah Kepala Keluarga (KK)'.")
 
 # Bagian ini hanya akan dieksekusi jika file ini dijalankan secara langsung, bukan sebagai modul yang diimpor oleh main.py.
 if __name__ == '__main__':

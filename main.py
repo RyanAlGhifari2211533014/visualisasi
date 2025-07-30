@@ -106,7 +106,7 @@ with st.sidebar:
 # Bagian ini menentukan halaman mana yang akan ditampilkan berdasarkan opsi yang dipilih di sidebar.
 if selected == 'Home':
     home.run() # Memanggil fungsi run() dari modul home
-elif selected == 'Jumlah Penduduk (2020-2025)':
+elif selected == 'Jumlah Penduduk':
     jumlah_penduduk.run() # Memanggil fungsi run() dari modul jumlah_penduduk_2020_2025
 elif selected == 'Jumlah Penduduk (Pendidikan)':
     jumlah_penduduk_pendidikan.run() # Memanggil fungsi run() dari modul jumlah_penduduk_pendidikan
