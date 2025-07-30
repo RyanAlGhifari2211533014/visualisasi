@@ -141,7 +141,8 @@ def load_pendidikan_data_from_gsheet():
             'Tidak Tamat SD',
             'Tamat SD/Sederajat',
             'Tamat SMP/Sederajat',
-            'Tamat SMA/Sederajat'
+            'Tamat SMA/Sederajat',
+            'Tamat Akademi/Perguruan Tinggi'
         ]
         # Pastikan kolom 'Pendidikan' ada sebelum membuat kategori
         if 'Pendidikan' in df.columns:
