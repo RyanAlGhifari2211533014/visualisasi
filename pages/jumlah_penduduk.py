@@ -32,7 +32,7 @@ def df_to_pdf(df):
 
     # Menambahkan judul
     # Lebar halaman A4 Portrait adalah 210mm, margin default 10mm di setiap sisi
-    pdf.cell(0, 10, txt="Data Jumlah Penduduk (2020-2025)", ln=True, align='C') # Lebar 0 agar cell mengambil sisa lebar halaman
+    pdf.cell(0, 10, txt="Data Jumlah Penduduk", ln=True, align='C') # Lebar 0 agar cell mengambil sisa lebar halaman
     pdf.ln(5) # Spasi
 
     # Perbaikan: Tambahkan kolom 'No' ke DataFrame untuk PDF
@@ -142,7 +142,7 @@ def get_penduduk_tahun_chart():
 
 # --- Fungsi utama untuk halaman ini ---
 def run():
-    st.title("Jumlah Penduduk (2020-2025)")
+    st.title("Jumlah Penduduk")
     st.markdown("---") # Garis pemisah
 
     # Memuat data penduduk

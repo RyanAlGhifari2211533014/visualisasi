@@ -3,7 +3,7 @@ import streamlit as st
 # Import fungsi get_chart() dari setiap halaman
 # Pastikan Anda sudah membuat fungsi get_chart_name() di setiap file halaman yang relevan
 # dan mereka mengembalikan objek Altair Chart (atau None jika data kosong/error).
-from pages.jumlah_penduduk_2020_2025 import get_penduduk_tahun_chart
+from pages.jumlah_penduduk import get_penduduk_tahun_chart
 from pages.jumlah_penduduk_pendidikan import get_pendidikan_chart
 from pages.jenis_pekerjaan_dominan import get_jenis_pekerjaan_chart
 from pages.jenis_tanah import get_jenis_tanah_chart
@@ -34,7 +34,6 @@ def run():
             <p style="font-size: 1.2em;">
                 Dashboard ini menyajikan berbagai visualisasi data penting mengenai kelurahan Anda.
                 Gunakan menu di sidebar untuk menjelajahi berbagai kategori data secara detail.
-
             </p>
         </div>
     """, unsafe_allow_html=True)

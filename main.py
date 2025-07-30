@@ -51,7 +51,7 @@ load_css("main.css")
 # Mengimpor modul-modul halaman dari folder 'pages'.
 # Setiap modul diasumsikan memiliki fungsi 'run()' yang akan dipanggil.
 from pages import home
-from pages import jumlah_penduduk_2020_2025
+from pages import jumlah_penduduk
 from pages import jumlah_penduduk_pendidikan
 # Tambahkan import untuk halaman lain di sini saat Anda membuatnya
 from pages import jenis_pekerjaan_dominan
@@ -107,7 +107,7 @@ with st.sidebar:
 if selected == 'Home':
     home.run() # Memanggil fungsi run() dari modul home
 elif selected == 'Jumlah Penduduk (2020-2025)':
-    jumlah_penduduk_2020_2025.run() # Memanggil fungsi run() dari modul jumlah_penduduk_2020_2025
+    jumlah_penduduk.run() # Memanggil fungsi run() dari modul jumlah_penduduk_2020_2025
 elif selected == 'Jumlah Penduduk (Pendidikan)':
     jumlah_penduduk_pendidikan.run() # Memanggil fungsi run() dari modul jumlah_penduduk_pendidikan
 elif selected == 'Jenis Pekerjaan Dominan':

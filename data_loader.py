@@ -9,7 +9,7 @@ from streamlit_gsheets import GSheetsConnection
 GOOGLE_SHEET_URL = st.secrets["connections"]["gsheets"]["spreadsheet"]
 
 # Nama-nama worksheet (tab) di Google Spreadsheet Anda
-WORKSHEET_NAME_PENDUDUK = "Jumlah Penduduk (2020-2025)"
+WORKSHEET_NAME_PENDUDUK = "Jumlah Penduduk"
 WORKSHEET_NAME_PENDIDIKAN = "Jumlah Penduduk (Pendidikan)" # Pastikan nama ini sudah benar di GSheet
 WORKSHEET_NAME_PEKERJAAN_DOMINAN = "Jenis Pekerjaan Dominan"
 WORKSHEET_NAME_JENIS_TANAH = "Jenis Tanah"
@@ -81,7 +81,7 @@ def load_penduduk_2020_from_gsheet():
     """
     Memuat dan memproses data jumlah penduduk dari Google Sheet.
 
-    Worksheet yang digunakan: 'Jumlah Penduduk (2020-2025)'
+    Worksheet yang digunakan: 'Jumlah Penduduk'
     Wajib memiliki kolom: 'Tahun', 'Jumlah Laki-Laki (orang)', 'Jumlah Perempuan (orang)', 'Jumlah Total (orang)', 'Jumlah Kepala Keluarga (KK)'
     """
     df = load_data_from_gsheets(WORKSHEET_NAME_PENDUDUK)
