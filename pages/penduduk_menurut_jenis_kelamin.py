@@ -25,102 +25,69 @@ def to_excel(df: pd.DataFrame):
 def df_to_pdf(df: pd.DataFrame):
     """
     Mengonversi DataFrame ke format PDF (BytesIO) menggunakan fpdf.
+    Fungsi ini telah diperbaiki untuk mengatasi masalah layout dan data kosong.
     """
-    pdf = FPDF(orientation='L', unit='mm', format='A4') # Gunakan Landscape
+    pdf = FPDF(orientation='L', unit='mm', format='A4') # 'L' untuk Landscape
     pdf.add_page()
-    pdf.set_font("Arial", size=8)
-
-    # Menambahkan judul
-    pdf.cell(0, 10, txt="Data Penduduk Menurut Jenis Kelamin", ln=True, align='C')
-    pdf.ln(5)
-
-    df_for_pdf = df.copy()
-    # Perbaikan: Pastikan kolom 'No' ditambahkan jika belum ada
-    if 'No' not in df_for_pdf.columns:
-        df_for_pdf.insert(0, 'No', range(1, 1 + len(df_for_pdf)))
     
-    # Menentukan header yang akan ditampilkan dan lebar kolomnya
-    # Penting: Gunakan nama kolom yang sudah distandarisasi oleh data_loader.py
-    headers_display = ['No', 'RW', 'RT', 'Jumlah KK', 'Laki-Laki', 'Perempuan', 'Jumlah Penduduk']
-    # Pemetaan nama kolom di DataFrame (setelah standardisasi di data_loader)
-    headers_df_map = {
-        'No': 'No', # 'No' sudah dibuat di df_for_pdf.insert
-        'RW': 'RW',
-        'RT': 'RT',
-        'Jumlah KK': 'Jumlah_KK', # Nama kolom setelah direname di data_loader
-        'Laki-Laki': 'LAKI_LAKI', # Nama kolom setelah direname di data_loader
-        'Perempuan': 'PEREMPUAN', # Nama kolom setelah direname di data_loader
-        'Jumlah Penduduk': 'Jumlah_Penduduk' # Nama kolom setelah direname di data_loader
-    }
+    # Menambahkan judul utama
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(0, 10, txt="Data Penduduk Menurut Jenis Kelamin", ln=True, align='C')
+    pdf.ln(5) # Memberi jarak setelah judul
 
+    # Menyiapkan nama kolom untuk tampilan dan untuk akses data di DataFrame
+    # Nama kolom ini harus sesuai dengan yang dihasilkan oleh data_loader.py
+    headers_df = ['No', 'RW', 'RT', 'Jumlah_KK', 'LAKI_LAKI', 'PEREMPUAN', 'Jumlah_Penduduk']
+    headers_display = ['No', 'RW', 'RT', 'Jumlah KK', 'Laki-Laki', 'Perempuan', 'Jumlah Penduduk']
+    
+    # Menentukan lebar setiap kolom
     col_widths = {
         'No': 15,
         'RW': 20,
         'RT': 20,
-        'Jumlah KK': 30,
-        'Laki-Laki': 30,
-        'Perempuan': 30,
-        'Jumlah Penduduk': 40
+        'Jumlah KK': 35,
+        'Laki-Laki': 35,
+        'Perempuan': 35,
+        'Jumlah Penduduk': 45
     }
+
+    # --- PERBAIKAN 1: Menyederhanakan proses pembuatan header ---
+    pdf.set_font("Arial", "B", 10) # Font tebal untuk header
     
-    y_start_headers = pdf.get_y()
-    x_current = pdf.get_x()
-    max_y_after_headers = y_start_headers
+    # Loop untuk membuat header tabel dalam satu baris
+    for i, header_text in enumerate(headers_display):
+        width = col_widths[header_text]
+        pdf.cell(width, 10, header_text, border=1, align='C')
+    pdf.ln() # Pindah ke baris baru setelah semua header selesai dicetak
 
-    for i, header_display in enumerate(headers_display):
-        current_col_width = col_widths.get(header_display, 30)
-        pdf.set_xy(x_current, y_start_headers)
-        pdf.multi_cell(current_col_width, 5, str(header_display).encode('latin-1', 'replace').decode('latin-1'), border=1, align='C')
-        x_current += current_col_width
-        max_y_after_headers = max(max_y_after_headers, pdf.get_y())
-
-    pdf.set_y(max_y_after_headers) 
-
-    # Data Baris Tabel
-    pdf.set_font("Arial", "", 7) # Font untuk data, sedikit lebih kecil
-    for row_index, row_data_original in df.iterrows(): # Gunakan df asli dari input fungsi
-        # Buat dictionary dari row_data_original dengan nama kolom yang sudah distandarisasi
-        row_data_for_display = {}
-        for display_header, df_column_name in headers_df_map.items():
-            if df_column_name in row_data_original.index:
-                row_data_for_display[display_header] = row_data_original[df_column_name]
-            elif display_header == 'No': # Handle 'No' column separately
-                row_data_for_display['No'] = row_index + 1
-
-        if pdf.get_y() + 10 > pdf.h - 20: # Cek apakah perlu halaman baru
-            pdf.add_page()
-            pdf.set_y(20)
-            x_current_new_page = pdf.get_x()
-            for i, header_display in enumerate(headers_display):
-                current_col_width = col_widths.get(header_display, 30)
-                pdf.set_xy(x_current_new_page, pdf.get_y())
-                pdf.multi_cell(current_col_width, 5, str(header_display).encode('latin-1', 'replace').decode('latin-1'), border=1, align='C')
-                x_current_new_page += current_col_width
-            pdf.ln(5)
-
-        # Perbaikan: Iterasi berdasarkan headers_display untuk urutan yang benar
-        for header_display_name in headers_display:
-            current_col_width = col_widths.get(header_display_name, 30)
-
-            # Ambil data dari dictionary yang sudah disiapkan
-            data = row_data_for_display.get(header_display_name, '')
+    # --- PERBAIKAN 2: Memperbaiki loop untuk mengambil dan mencetak data ---
+    pdf.set_font("Arial", "", 10) # Font normal untuk isi tabel
+    
+    # Loop melalui setiap baris di DataFrame
+    for index, row in df.iterrows():
+        # Loop melalui setiap kolom yang ingin kita tampilkan
+        for i, header_display_text in enumerate(headers_display):
+            width = col_widths[header_display_text]
+            # Ambil nama kolom yang sesuai untuk DataFrame
+            df_col_name = headers_df[i]
             
-            # Perbaikan: Menghilangkan ".0" untuk nilai numerik
+            # Ambil data dari baris menggunakan nama kolom yang benar
+            data = row[df_col_name]
+            
+            # Format data untuk menghilangkan .0 jika itu integer
             formatted_data = str(data)
-            if isinstance(data, (int, float)):
-                if float(data).is_integer():
-                    formatted_data = str(int(data))
-                else:
-                    formatted_data = str(data)
+            if isinstance(data, (int, float)) and float(data).is_integer():
+                formatted_data = str(int(data))
             
-            pdf.cell(current_col_width, 10, formatted_data.encode('latin-1', 'replace').decode('latin-1'), border=1, align='C')
-        pdf.ln(10)
+            # Cetak sel data
+            pdf.cell(width, 10, formatted_data.encode('latin-1', 'replace').decode('latin-1'), border=1)
+        pdf.ln() # Pindah ke baris baru untuk data selanjutnya
 
+    # Menambahkan sumber di bagian bawah
     pdf.set_y(pdf.get_y() + 5)
-    pdf.set_font("Arial", size=8)
+    pdf.set_font("Arial", "I", 8) # Font miring untuk sumber
     pdf.cell(0, 10, "Sumber: Kelurahan Kubu Marapalam", align='C')
-    
-    #return pdf.output(dest='S').encode('latin-1')
+
     return bytes(pdf.output())
 
 # --- FUNGSI BARU: Mendapatkan Objek Grafik untuk Halaman ini ---
