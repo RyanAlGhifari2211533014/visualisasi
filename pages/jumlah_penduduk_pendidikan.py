@@ -141,7 +141,6 @@ def get_pendidikan_chart():
         return None
 
 # --- Fungsi utama untuk menjalankan halaman ---
-
 def run():
     """
     Merender halaman 'Jumlah Penduduk (Pendidikan)'.
@@ -152,14 +151,39 @@ def run():
     df_pendidikan = load_pendidikan_data_from_gsheet()
 
     if not df_pendidikan.empty:
+        # --- PERBAIKAN: Hilangkan .0 dari kolom 'No' dan pastikan tipe data sesuai ---
+        if 'No' in df_pendidikan.columns:
+            # Konversi kolom 'No' ke numerik, dengan errors='coerce' untuk mengubah non-angka menjadi NaN
+            df_pendidikan['No'] = pd.to_numeric(df_pendidikan['No'], errors='coerce')
+            # Kemudian, ubah NaN menjadi 0 (atau string kosong jika ingin barisnya tetap ada tapi No-nya kosong)
+            # Lalu konversi ke integer jika bukan NaN, atau biarkan NaN untuk float atau non-numerik.
+            # Karena Anda ingin menghilangkan .0, kita asumsikan nilainya harus bulat atau kosong.
+            df_pendidikan['No'] = df_pendidikan['No'].apply(lambda x: int(x) if pd.notna(x) else None)
+            # Untuk tampilan di Streamlit, kita bisa langsung menggunakan integer atau None.
+            # Jika ada None, Streamlit akan menampilkannya sebagai kosong secara default.
 
         # --- Tampilkan Tabel Data ---
         st.subheader("Tabel Rincian Data Pendidikan")
         
+        # --- LOGIKA TAMBAHAN UNTUK BARIS TOTAL SAJA ---
+        df_display = df_pendidikan.copy() # Buat salinan untuk ditampilkan
+
+        if 'Jumlah' in df_display.columns:
+            # Pastikan 'Jumlah' adalah numerik sebelum dijumlahkan
+            df_display['Jumlah'] = pd.to_numeric(df_display['Jumlah'], errors='coerce').fillna(0)
+            total_jumlah = df_display['Jumlah'].sum()
+            
+            # Buat baris total
+            total_row_dict = {col: '' for col in df_display.columns} # Inisialisasi semua kolom kosong
+            # Isi kolom yang relevan
+            total_row_dict['No'] = '' 
+            total_row_dict['Pendidikan'] = 'TOTAL' 
+            total_row_dict['Jumlah'] = total_jumlah 
+            
+            # Gabungkan baris total ke DataFrame tampilan
+            df_display = pd.concat([df_display, pd.DataFrame([total_row_dict])], ignore_index=True)
         
-        st.dataframe(df_pendidikan, use_container_width=True, hide_index=True)
-        
-        
+        st.dataframe(df_display, use_container_width=True, hide_index=True) # Gunakan df_display dengan hide_index
         st.markdown("---")
 
         # --- Tampilkan Visualisasi dengan Altair ---
@@ -172,6 +196,7 @@ def run():
             st.info("Tidak dapat menampilkan grafik karena data tidak tersedia atau tidak valid.")
 
         # --- Siapkan Data dan Tombol Download ---
+        # Penting: Gunakan df_pendidikan ASLI (TANPA baris total) untuk export
         df_excel = to_excel(df_pendidikan)
         pdf_data = df_to_pdf(df_pendidikan)
 
@@ -196,3 +221,7 @@ def run():
             )
     else:
         st.info("Belum ada data pendidikan yang valid untuk divisualisasikan. Pastikan Google Sheet Anda dapat diakses dan memiliki data yang benar di worksheet 'Jumlah Penduduk (Pendidikan)' dengan kolom 'No', 'Pendidikan', dan 'Jumlah'.")
+
+# Bagian ini hanya akan dieksekusi jika file ini dijalankan secara langsung, bukan sebagai modul yang diimpor oleh main.py.
+if __name__ == '__main__':
+    run()

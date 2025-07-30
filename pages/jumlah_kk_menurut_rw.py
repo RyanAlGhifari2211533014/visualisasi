@@ -41,7 +41,7 @@ def df_to_pdf(df: pd.DataFrame):
     # Buat salinan DataFrame dan hapus kolom yang tidak diinginkan
     df_for_pdf = df.drop(columns=['LAKI- LAKI', 'PEREMPUAN'], errors='ignore')
     
-    # Perbaikan: Tambahkan kolom 'No' ke DataFrame untuk PDF sebagai nomor urut
+    # Perbaikan: Tambahkan kolom 'No.' ke DataFrame untuk PDF sebagai nomor urut
     df_for_pdf.insert(0, 'No.', range(1, 1 + len(df_for_pdf))) 
 
     # Header Kolom Tabel
@@ -163,8 +163,26 @@ def run():
     if not df_kk_rw.empty:
         # --- Tampilkan Tabel Data (tanpa kolom LAKI- LAKI, PEREMPUAN) ---
         st.subheader("Tabel Rincian Jumlah Kepala Keluarga per RW")
-        df_display = df_kk_rw.drop(columns=['LAKI- LAKI', 'PEREMPUAN'], errors='ignore')
-        st.dataframe(df_display, use_container_width=True)
+        
+        # Buat df_display dengan kolom yang diinginkan (tanpa LAKI-LAKI, PEREMPUAN)
+        df_display = df_kk_rw.drop(columns=['LAKI- LAKI', 'PEREMPUAN'], errors='ignore').copy() 
+
+        # --- LOGIKA TAMBAHAN UNTUK BARIS TOTAL ---
+        if 'JUMLAH KK' in df_display.columns:
+            # Pastikan 'JUMLAH KK' adalah numerik sebelum dijumlahkan
+            df_display['JUMLAH KK'] = pd.to_numeric(df_display['JUMLAH KK'], errors='coerce').fillna(0)
+            total_jumlah_kk = df_display['JUMLAH KK'].sum()
+            
+            # Buat baris total
+            total_row_dict = {col: '' for col in df_display.columns} # Inisialisasi semua kolom kosong
+            total_row_dict['RW'] = 'TOTAL' # Label untuk baris total
+            total_row_dict['JUMLAH KK'] = total_jumlah_kk # Jumlah total
+            
+            # Gabungkan baris total ke DataFrame tampilan
+            df_display = pd.concat([df_display, pd.DataFrame([total_row_dict])], ignore_index=True)
+        # --- AKHIR LOGIKA TAMBAHAN BARIS TOTAL ---
+        
+        st.dataframe(df_display, use_container_width=True, hide_index=True) # Tambahkan hide_index=True untuk tampilan lebih rapi
         st.markdown("---")
 
         # --- Tampilkan Visualisasi dengan Altair ---

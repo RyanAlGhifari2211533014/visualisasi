@@ -3,6 +3,7 @@ import pandas as pd
 import altair as alt # Menggunakan Altair untuk visualisasi
 import io
 from fpdf import FPDF # Pastikan 'fpdf2' terinstal.
+import numpy as np # Ditambahkan untuk np.nan, jika diperlukan untuk pembersihan
 
 # Import fungsi pemuat data
 from data_loader import load_umkm_data_gsheet
@@ -24,7 +25,7 @@ def to_excel(df: pd.DataFrame):
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer: # Menggunakan xlsxwriter untuk Excel
         df_filtered.to_excel(writer, index=False, sheet_name='DataUMKM')
     processed_data = output.getvalue()
-    return output.getvalue() # Mengembalikan nilai BytesIO
+    return processed_data # Mengembalikan nilai BytesIO
 
 def df_to_pdf(df: pd.DataFrame):
     """
@@ -42,7 +43,7 @@ def df_to_pdf(df: pd.DataFrame):
     # Sesuai permintaan Colab, hanya 'Jenis' dan 'Jumlah' yang divisualisasikan/ditampilkan
     df_for_pdf = df.drop(columns=['No.'], errors='ignore')
     
-    # Perbaikan: Tambahkan kolom 'No' ke DataFrame untuk PDF sebagai nomor urut
+    # Perbaikan: Tambahkan kolom 'No.' ke DataFrame untuk PDF sebagai nomor urut
     df_for_pdf.insert(0, 'No.', range(1, 1 + len(df_for_pdf))) 
 
     # Header Kolom Tabel
@@ -161,10 +162,61 @@ def run():
     df_umkm = load_umkm_data_gsheet()
 
     if not df_umkm.empty:
-        # --- Tampilkan Tabel Data (tanpa kolom 'No.') ---
+        # --- PERBAIKAN: Pembersihan data awal, mirip dengan yang di jumlah_penduduk_pendidikan.py ---
+        # 1. Bersihkan nilai sel: strip spasi, ganti string kosong/None/NaN menjadi np.nan
+        for col in df_umkm.columns:
+            # Pastikan kolom bisa diubah ke string sebelum strip() dan replace()
+            df_umkm[col] = df_umkm[col].astype(str).str.strip().replace(r'^\s*$', np.nan, regex=True).replace('None', np.nan)
+        
+        # 2. Konversi Kolom Kunci dan Isi NaN dengan nilai default
+        if 'Jenis' in df_umkm.columns:
+            df_umkm['Jenis'] = df_umkm['Jenis'].astype(object).fillna('Tidak Diketahui').astype(str)
+        else:
+            st.warning("Kolom 'Jenis' tidak ditemukan setelah pembersihan.")
+            return # Keluar dari fungsi jika kolom penting tidak ada
+
+        if 'Jumlah' in df_umkm.columns:
+            df_umkm['Jumlah'] = pd.to_numeric(df_umkm['Jumlah'], errors='coerce').fillna(0).astype(int)
+        else:
+            st.warning("Kolom 'Jumlah' tidak ditemukan setelah pembersihan.")
+            return # Keluar dari fungsi jika kolom penting tidak ada
+
+        # 3. Filter Baris Kosong Final (yang paling agresif)
+        # Hapus baris di mana 'Jenis' adalah 'Tidak Diketahui' ATAU string kosong DAN 'Jumlah' adalah 0
+        df_umkm = df_umkm[
+            (df_umkm['Jenis'] != 'Tidak Diketahui') | (df_umkm['Jumlah'] != 0)
+        ].copy()
+
+        # 4. Hilangkan .0 dari kolom 'No.' (jika ada)
+        if 'No.' in df_umkm.columns:
+            df_umkm['No.'] = pd.to_numeric(df_umkm['No.'], errors='coerce')
+            df_umkm['No.'] = df_umkm['No.'].apply(lambda x: int(x) if pd.notna(x) else None)
+
+
+        # --- Tampilkan Tabel Data ---
         st.subheader("Tabel Rincian Industri UMKM")
-        df_display = df_umkm.drop(columns=['No.'], errors='ignore')
-        st.dataframe(df_display, use_container_width=True)
+        
+        # --- LOGIKA TAMBAHAN UNTUK BARIS TOTAL DAN HILANGKAN .0 PADA KOLOM 'No.' ---
+        df_display = df_umkm.copy() # Buat salinan untuk ditampilkan
+
+        if 'Jumlah' in df_display.columns:
+            # Pastikan 'Jumlah' adalah numerik sebelum dijumlahkan
+            df_display['Jumlah'] = pd.to_numeric(df_display['Jumlah'], errors='coerce').fillna(0)
+            total_jumlah = df_display['Jumlah'].sum()
+            
+            # Buat baris total
+            total_row_dict = {col: '' for col in df_display.columns} # Inisialisasi semua kolom kosong
+            # Isi kolom yang relevan
+            total_row_dict['No.'] = '' # Kolom 'No.' tidak perlu total angka
+            total_row_dict['Jenis'] = 'TOTAL' 
+            total_row_dict['Jumlah'] = total_jumlah 
+            
+            # Gabungkan baris total ke DataFrame tampilan
+            df_display = pd.concat([df_display, pd.DataFrame([total_row_dict])], ignore_index=True)
+        
+        # Kolom 'No.' sudah diubah ke integer atau None di df_umkm, yang akan terbawa ke df_display
+        # Jika Anda ingin height=350 juga seperti sebelumnya, bisa ditambahkan di sini.
+        st.dataframe(df_display, use_container_width=True, hide_index=True)
         st.markdown("---")
 
         # --- Tampilkan Visualisasi dengan Altair ---
@@ -213,3 +265,10 @@ def run():
             )
     else:
         st.info("Belum ada data UMKM yang valid untuk divisualisasikan. Pastikan Google Sheet Anda dapat diakses dan memiliki data yang benar di worksheet 'Jumlah Industri UMKM' dengan kolom 'No.', 'Jenis', dan 'Jumlah'.")
+
+# --- Jangan lupa impor numpy jika belum ada di file ini ---
+# import numpy as np # Tambahkan ini di bagian atas file jika belum ada
+
+# Bagian ini hanya akan dieksekusi jika file ini dijalankan secara langsung, bukan sebagai modul yang diimpor oleh main.py.
+if __name__ == '__main__':
+    run()
