@@ -1,0 +1,7 @@
+streamlit
+streamlit-option-menu
+pandas
+altair
+fpdf2
+streamlit-gsheets
+xlsxwriter
