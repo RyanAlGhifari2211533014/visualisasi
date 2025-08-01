@@ -133,7 +133,7 @@ elif selected == 'Tenaga Kerja':
 elif selected == 'Admin': # BARU: Logika untuk opsi Admin
     st.subheader("Akses Halaman Admin")
     st.write("Klik tombol di bawah untuk membuka Google Sheet database Anda:")
-    st.markdown(f'<a href="{GOOGLE_SHEET_URL}" target="_blank"><button style="background-color:#4CAF50;color:white;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;">Buka Google Sheet Database</button></a>', unsafe_allow_html=True)
+    st.markdown(f'<a href="{"https://docs.google.com/spreadsheets/d/1NqSvNpPpCtrhVGsIADEg-SNO5KKASq22vDbY0CndsQQ/edit?usp=sharing"}" target="_blank"><button style="background-color:#4CAF50;color:white;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;">Buka Google Sheet Database</button></a>', unsafe_allow_html=True)
     st.info("Pastikan Anda sudah login ke akun Google yang memiliki akses ke spreadsheet ini.")
 
 elif selected == 'Peta': # BARU: Logika untuk opsi Peta
