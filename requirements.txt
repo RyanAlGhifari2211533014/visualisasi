@@ -5,3 +5,4 @@ altair
 fpdf2
 st-gsheets-connection
 xlsxwriter
+openpyxl
