@@ -3,3 +3,22 @@ showSidebarNavigation = false
 
 [server]
 folderWatchdog = true
+
+# File ini mengatur tema warna untuk seluruh aplikasi Streamlit
+
+[theme]
+# Warna utama untuk widget interaktif (tombol yang aktif, dll)
+primaryColor="#dc3545"
+
+# Warna latar belakang untuk area konten utama (termasuk grafik)
+backgroundColor="#EFF2F6"
+
+# Warna latar belakang untuk sidebar
+secondaryBackgroundColor="#111111"
+
+# Warna teks untuk area konten utama (termasuk teks pada sumbu grafik)
+textColor="#111111"
+
+# Jenis font yang digunakan
+font="sans serif"
+
