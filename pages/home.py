@@ -68,9 +68,9 @@ def run():
     """, unsafe_allow_html=True)
     
     # --- Slideshow Infografis ---
-    with st.container(border=True):
-        st.subheader("📊 Infografis Terbaru")
-        display_slideshow()
+    # with st.container(border=True):
+    #     st.subheader("📊 Infografis Terbaru")
+    #     display_slideshow()
     
     # --- Grafik Perkembangan Penduduk ---
     with st.container(border=True):
