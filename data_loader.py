@@ -579,3 +579,23 @@ def load_tenaga_kerja_from_gsheet():
 
         df = df.sort_values(by=['No']).reset_index(drop=True) # Urutkan berdasarkan kolom 'No' yang baru
     return df
+# <<< DITAMBAHKAN: Fungsi baru untuk membaca URL infografis dari Google Sheet >>>
+@st.cache_data(ttl=600)
+def load_infografis_urls_from_gsheet():
+    """Membaca daftar URL gambar dari worksheet 'Infografis'."""
+    # <<< PERBAIKAN: Panggil koneksi di awal fungsi >>>
+    conn = get_gsheets_connection()
+    if conn is None:
+        return []
+
+    try:
+        # Membaca worksheet bernama "Infografis" dan kolom "URL_Gambar"
+        df = conn.read(worksheet="Infografis", usecols=["URL_Gambar"], ttl=0)
+        df = df.dropna(how="all")
+        # Mengembalikan daftar URL, bukan dataframe
+        return df["URL_Gambar"].tolist()
+    except Exception as e:
+        # Jika worksheet atau kolom tidak ada, kembalikan daftar kosong agar tidak error
+        st.error(f"Gagal membaca worksheet 'Infografis'. Pastikan nama sheet dan kolom 'URL_Gambar' sudah benar. Detail: {e}")
+        return []
+    

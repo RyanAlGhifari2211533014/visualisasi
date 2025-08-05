@@ -1,6 +1,6 @@
 import streamlit as st
 
-# Import fungsi get_chart() dari setiap halaman
+# Import semua fungsi get_chart() dari setiap halaman
 from pages.jumlah_penduduk import get_penduduk_tahun_chart
 from pages.jumlah_penduduk_pendidikan import get_pendidikan_chart
 from pages.jenis_pekerjaan_dominan import get_jenis_pekerjaan_chart
@@ -9,32 +9,68 @@ from pages.jumlah_industri_umkm import get_umkm_chart
 from pages.jumlah_kk_menurut_rw import get_kk_rw_chart
 from pages.jumlah_penduduk_status_pekerja import get_status_pekerja_chart
 from pages.penduduk_disabilitas import get_disabilitas_chart
-
-# PENTING: Impor fungsi pemuat data yang diperlukan untuk grafik di home.py
-from data_loader import load_penduduk_jenis_kelamin_gsheet
-from data_loader import load_tenaga_kerja_from_gsheet
 from pages.penduduk_menurut_jenis_kelamin import get_penduduk_jenis_kelamin_chart1
-
 from pages.sarana_dan_prasarana import get_sarana_prasarana_chart
 from pages.sarana_kebersihan import get_sarana_kebersihan_chart
 from pages.tenaga_kerja import get_tenaga_kerja_chart
 
+# Impor fungsi pemuat data yang diperlukan
+from data_loader import load_infografis_urls_from_gsheet, load_penduduk_jenis_kelamin_gsheet, load_tenaga_kerja_from_gsheet
+
+def display_slideshow():
+    """
+    Fungsi ini mengambil URL gambar dari Google Sheet dan menampilkannya
+    sebagai slideshow interaktif.
+    """
+    image_urls = load_infografis_urls_from_gsheet()
+
+    if not image_urls:
+        st.info("Saat ini belum ada infografis untuk ditampilkan.")
+        return
+
+    if 'home_slide_index' not in st.session_state:
+        st.session_state.home_slide_index = 0
+    
+    if st.session_state.home_slide_index >= len(image_urls):
+        st.session_state.home_slide_index = 0
+
+    st.image(image_urls[st.session_state.home_slide_index], use_container_width=True)
+
+    col1, col2, col3 = st.columns([2, 8, 2])
+
+    with col1:
+        if st.button("⬅️ Sebelumnya", use_container_width=True, key="home_prev"):
+            if st.session_state.home_slide_index > 0:
+                st.session_state.home_slide_index -= 1
+                st.rerun()
+
+    with col3:
+        if st.button("Berikutnya ➡️", use_container_width=True, key="home_next"):
+            if st.session_state.home_slide_index < len(image_urls) - 1:
+                st.session_state.home_slide_index += 1
+                st.rerun()
+            
+    with col2:
+        st.write("") 
+        st.markdown(f"<p style='text-align: center; color: grey;'>Infografis {st.session_state.home_slide_index + 1} dari {len(image_urls)}</p>", unsafe_allow_html=True)
+
+
 def run():
-    """
-    Renders the Home page content with summary charts.
-    """
     st.title("Selamat Datang di Dashboard Kelurahan Marapalam")
     st.markdown("""
         <div style="text-align: center;">
             <p style="font-size: 1.2em;">
-                Dashboard ini Diberi mana SIGEMA (Sistem Informasi Geospasial Marapalam). Halaman Dasboard ini
-                menyajikan berbagai visualisasi data penting mengenai kelurahan Marapalam.  
+                Dashboard SIGEMA (Sistem Informasi Geospasial Marapalam) ini
+                menyajikan berbagai visualisasi data penting mengenai kelurahan.
                 Gunakan menu di sidebar untuk menjelajahi berbagai kategori data secara detail.
             </p>
         </div>
     """, unsafe_allow_html=True)
     
-    # <<< DIUBAH: Setiap grafik dibungkus dengan st.container(border=True) untuk membuat efek kartu >>>
+    # --- Slideshow Infografis ---
+    with st.container(border=True):
+        st.subheader("📊 Infografis Terbaru")
+        display_slideshow()
     
     # --- Grafik Perkembangan Penduduk ---
     with st.container(border=True):
@@ -45,10 +81,9 @@ def run():
         else:
             st.info("Grafik tidak tersedia.")
         
-    # --- Baris 1: 2 Grafik ---
-    col2, col3 = st.columns(2)
-
-    with col2:
+    # --- Baris 1: Pendidikan & Pekerjaan ---
+    col1, col2 = st.columns(2)
+    with col1:
         with st.container(border=True):
             st.subheader("🎓 Distribusi Pendidikan")
             chart_pendidikan = get_pendidikan_chart()
@@ -56,8 +91,7 @@ def run():
                 st.altair_chart(chart_pendidikan, use_container_width=True)
             else:
                 st.info("Grafik tidak tersedia.")
-
-    with col3:
+    with col2:
         with st.container(border=True):
             st.subheader("👷‍♂️ Jenis Pekerjaan Dominan")
             chart_pekerjaan = get_jenis_pekerjaan_chart()
@@ -66,10 +100,9 @@ def run():
             else:
                 st.info("Grafik tidak tersedia.")
     
-    # --- Baris 2: 3 Grafik ---
-    col4, col5, col6 = st.columns(3)
-
-    with col4:
+    # --- Baris 2: Jenis Tanah, UMKM, dan KK per RW ---
+    col3, col4, col5 = st.columns(3)
+    with col3:
         with st.container(border=True):
             st.subheader("🗺️ Perbandingan Jenis Tanah")
             chart_jenis_tanah = get_jenis_tanah_chart()
@@ -77,8 +110,7 @@ def run():
                 st.altair_chart(chart_jenis_tanah, use_container_width=True)
             else:
                 st.info("Grafik tidak tersedia.")
-
-    with col5:
+    with col4:
         with st.container(border=True):
             st.subheader("🏭 Jumlah Industri UMKM")
             chart_umkm = get_umkm_chart()
@@ -86,8 +118,7 @@ def run():
                 st.altair_chart(chart_umkm, use_container_width=True)
             else:
                 st.info("Grafik tidak tersedia.")
-
-    with col6:
+    with col5:
         with st.container(border=True):
             st.subheader("👨‍👩‍👧‍👦 Jumlah KK Menurut RW")
             chart_kk_rw = get_kk_rw_chart()
@@ -96,10 +127,9 @@ def run():
             else:
                 st.info("Grafik tidak tersedia.")
 
-    # --- Baris 3: 2 Grafik ---
-    col7, col8 = st.columns(2)
-
-    with col7:
+    # --- Baris 3: Status Pekerja & Disabilitas ---
+    col6, col7 = st.columns(2)
+    with col6:
         with st.container(border=True):
             st.subheader("👨‍💼 Proporsi Status Pekerja")
             chart_status_pekerja = get_status_pekerja_chart()
@@ -107,8 +137,7 @@ def run():
                 st.altair_chart(chart_status_pekerja, use_container_width=True)
             else:
                 st.info("Grafik tidak tersedia.")
-
-    with col8:
+    with col7:
         with st.container(border=True):
             st.subheader("♿ Jumlah Disabilitas")
             chart_disabilitas = get_disabilitas_chart()
@@ -127,10 +156,9 @@ def run():
         else:
             st.info("Grafik Jumlah Penduduk Menurut Jenis Kelamin tidak tersedia atau data kosong.")
     
-    # --- Baris 4: 2 Grafik ---
-    col11, col12 = st.columns(2)
-
-    with col11:
+    # --- Baris 4: Sarana & Prasarana dan Kebersihan ---
+    col8, col9 = st.columns(2)
+    with col8:
         with st.container(border=True):
             st.subheader("🏢 Sarana dan Prasarana")
             chart_sarana = get_sarana_prasarana_chart()
@@ -138,8 +166,7 @@ def run():
                 st.altair_chart(chart_sarana, use_container_width=True)
             else:
                 st.info("Grafik tidak tersedia.")
-    
-    with col12:
+    with col9:
         with st.container(border=True):
             st.subheader("🗑️ Sarana Kebersihan")
             chart_kebersihan = get_sarana_kebersihan_chart()

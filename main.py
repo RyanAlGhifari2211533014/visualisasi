@@ -61,6 +61,8 @@ with st.sidebar:
             "nav-link-selected": {"background-color": "#004488"}, 
         }
     )
+    
+    
 
 if selected == 'Home': home.run()
 elif selected == 'Jumlah Penduduk': jumlah_penduduk.run()
