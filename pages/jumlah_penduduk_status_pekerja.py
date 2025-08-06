@@ -58,9 +58,8 @@ def df_to_pdf(df: pd.DataFrame):
     pdf.set_font("Arial", size=8)
     pdf.cell(0, 10, "Sumber: Kelurahan Kubu Marapalam", align='C')
     
-    #return bytes(pdf.output())
-    return bytes(pdf.output(), 'utf-8')
-
+    return bytes(pdf.output())
+   
 # <<< DIUBAH: Fungsi get_status_pekerja_chart diperbarui sepenuhnya >>>
 def get_status_pekerja_chart():
     df_status_pekerja = load_status_pekerja_data_gsheet()

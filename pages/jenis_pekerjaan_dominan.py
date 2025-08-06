@@ -56,8 +56,8 @@ def df_to_pdf(df: pd.DataFrame):
     pdf.cell(0, 10, "Sumber: Kelurahan Kubu Marapalam", align='C')
 
 
-    #return bytes(pdf.output())
-    return bytes(pdf.output(), 'utf-8')
+    return bytes(pdf.output())
+    
 
 # <<< DIUBAH: Fungsi get_jenis_pekerjaan_chart diperbarui sepenuhnya >>>
 def get_jenis_pekerjaan_chart():
