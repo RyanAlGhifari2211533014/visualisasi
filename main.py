@@ -87,6 +87,6 @@ elif selected == 'Peta':
     st.title("🗺️ Peta Geospasial")
     st.write("Klik tombol di bawah untuk membuka peta interaktif kelurahan:")
     # Ganti URL ini dengan URL Google Earth Anda yang benar
-    PETA_URL = "https://earth.google.com/earth/d/1UDWR2S6sygquKm74PC_WlKcv2_kqZIO-?usp=sharing"
+    PETA_URL = "https://earth.google.com/earth/d/17GwLPOj3Yh1kg8KS_sBaGdHtlp10Dc-k?usp=sharing"
     st.markdown(f'<a href="{PETA_URL}" target="_blank" style="text-decoration: none;"><button style="background-color:#1a73e8;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:16px;">Buka Peta</button></a>', unsafe_allow_html=True)
 

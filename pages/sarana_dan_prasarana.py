@@ -84,7 +84,9 @@ def df_to_pdf(df: pd.DataFrame):
     pdf.set_font("Arial", "I", 8) # Font miring untuk sumber
     pdf.cell(0, 10, "Sumber: Kelurahan Kubu Marapalam", align='C')
 
-    return bytes(pdf.output())
+    
+    #return bytes(pdf.output())
+    return bytes(pdf.output(), 'utf-8')
 
 # --- FUNGSI BARU: Mendapatkan Objek Grafik untuk Halaman ini ---
 def get_sarana_prasarana_chart():

@@ -54,7 +54,9 @@ def df_to_pdf(df: pd.DataFrame):
     pdf.set_y(pdf.get_y() + 5)
     pdf.set_font("Arial", size=8)
     pdf.cell(0, 10, "Sumber: Kelurahan Kubu Marapalam", align='C')
-    return bytes(pdf.output())
+    
+    #return bytes(pdf.output())
+    return bytes(pdf.output(), 'utf-8')
 
 # <<< DIUBAH: Fungsi get_pendidikan_chart diperbarui sepenuhnya >>>
 def get_pendidikan_chart():
