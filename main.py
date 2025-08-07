@@ -50,7 +50,7 @@ with st.sidebar:
     st.title("SIGEMA")
     selected = option_menu(
         menu_title=None, 
-        options=['Home', 'Jumlah Penduduk', 'Jumlah Penduduk (Pendidikan)', 'Jenis Pekerjaan Dominan', 'Jenis Tanah', 'Jumlah Industri UMKM', 'Jumlah KK Menurut RW', 'Jumlah Penduduk (Status Pekerja)', 'Penduduk Disabilitas', 'Penduduk Menurut Jenis Kelamin', 'Sarana dan Prasarana', 'Sarana Kebersihan', 'Tenaga Kerja', 'Peta', 'Admin'],
+        options=['Home', 'Jumlah Penduduk', 'Jumlah Penduduk (Pendidikan)', 'Jenis Pekerjaan Dominan', 'Jenis Tanah', 'Jumlah Industri UMKM', 'Jumlah KK Menurut RW', 'Jumlah Penduduk (Status Pekerja)', 'Penduduk Disabilitas', 'Penduduk Menurut Jenis Kelamin', 'Sarana dan Prasarana', 'Sarana Kebersihan', 'Tenaga Kerja', 'Peta', 'Admin', 'Infografis'],
         icons=['house', 'graph-up', 'mortarboard', 'person-workspace', 'map', 'building', 'people', 'person-badge', 'universal-access', 'person-fill-gear', 'hospital', 'trash', 'briefcase', 'gear'],
         menu_icon="cast",
         default_index=0,
@@ -89,4 +89,8 @@ elif selected == 'Peta':
     # Ganti URL ini dengan URL Google Earth Anda yang benar
     PETA_URL = "https://earth.google.com/earth/d/17GwLPOj3Yh1kg8KS_sBaGdHtlp10Dc-k?usp=sharing"
     st.markdown(f'<a href="{PETA_URL}" target="_blank" style="text-decoration: none;"><button style="background-color:#1a73e8;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:16px;">Buka Peta</button></a>', unsafe_allow_html=True)
-
+elif selected == 'Infografis':
+    st.title("INFOGRAFIS")
+    st.write("Klik tombol di bawah untuk membuka Infografis kelurahan:")
+    INFOGRAFIS_URL = "https://inografis.my.canva.site/"
+    st.markdown(f'<a href="{INFOGRAFIS_URL}" target="_blank" style="text-decoration: none;"><button style="background-color:#1a73e8;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:16px;">Buka Peta</button></a>', unsafe_allow_html=True)
