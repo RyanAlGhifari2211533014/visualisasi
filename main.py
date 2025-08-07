@@ -93,4 +93,4 @@ elif selected == 'Infografis':
     st.title("INFOGRAFIS")
     st.write("Klik tombol di bawah untuk membuka Infografis kelurahan:")
     INFOGRAFIS_URL = "https://inografis.my.canva.site/"
-    st.markdown(f'<a href="{INFOGRAFIS_URL}" target="_blank" style="text-decoration: none;"><button style="background-color:#1a73e8;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:16px;">Buka Peta</button></a>', unsafe_allow_html=True)
+    st.markdown(f'<a href="{INFOGRAFIS_URL}" target="_blank" style="text-decoration: none;"><button style="background-color:#1a73e8;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:16px;">Buka Infografis</button></a>', unsafe_allow_html=True)
