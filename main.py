@@ -97,5 +97,5 @@ elif selected == 'Infografis':
 elif selected == 'Profil Kelurahan':
     st.title("Profil Kelurahan")
     st.write("Klik tombol di bawah untuk membuka Profil kelurahan:")
-    PROFIL_URL = ""
+    PROFIL_URL = "https://drive.google.com/drive/folders/1YXKb_3bCBtjo1fd2KFJBv0cCoQ0UhqzL?usp=drive_link"
     st.markdown(f'<a href="{PROFIL_URL}" target="_blank" style="text-decoration: none;"><button style="background-color:#1a73e8;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:16px;">Buka Profil</button></a>', unsafe_allow_html=True)
