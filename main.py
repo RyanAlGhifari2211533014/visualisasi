@@ -50,7 +50,7 @@ with st.sidebar:
     st.title("SIGEMA")
     selected = option_menu(
         menu_title=None, 
-        options=['Home', 'Jumlah Penduduk', 'Jumlah Penduduk (Pendidikan)', 'Jenis Pekerjaan Dominan', 'Jenis Tanah', 'Jumlah Industri UMKM', 'Jumlah KK Menurut RW', 'Jumlah Penduduk (Status Pekerja)', 'Penduduk Disabilitas', 'Penduduk Menurut Jenis Kelamin', 'Sarana dan Prasarana', 'Sarana Kebersihan', 'Tenaga Kerja', 'Peta', 'Admin', 'Infografis'],
+        options=['Home', 'Jumlah Penduduk', 'Jumlah Penduduk (Pendidikan)', 'Jenis Pekerjaan Dominan', 'Jenis Tanah', 'Jumlah Industri UMKM', 'Jumlah KK Menurut RW', 'Jumlah Penduduk (Status Pekerja)', 'Penduduk Disabilitas', 'Penduduk Menurut Jenis Kelamin', 'Sarana dan Prasarana', 'Sarana Kebersihan', 'Tenaga Kerja', 'Peta', 'Admin', 'Infografis', 'Kelurahan'],
         icons=['house', 'graph-up', 'mortarboard', 'person-workspace', 'map', 'building', 'people', 'person-badge', 'universal-access', 'person-fill-gear', 'hospital', 'trash', 'briefcase', 'gear'],
         menu_icon="cast",
         default_index=0,
@@ -94,3 +94,8 @@ elif selected == 'Infografis':
     st.write("Klik tombol di bawah untuk membuka Infografis kelurahan:")
     INFOGRAFIS_URL = "https://inografis.my.canva.site/"
     st.markdown(f'<a href="{INFOGRAFIS_URL}" target="_blank" style="text-decoration: none;"><button style="background-color:#1a73e8;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:16px;">Buka Infografis</button></a>', unsafe_allow_html=True)
+elif selected == 'Profil Kelurahan':
+    st.title("Profil Kelurahan")
+    st.write("Klik tombol di bawah untuk membuka Profil kelurahan:")
+    PROFIL_URL = ""
+    st.markdown(f'<a href="{PROFIL_URL}" target="_blank" style="text-decoration: none;"><button style="background-color:#1a73e8;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:16px;">Buka Profil</button></a>', unsafe_allow_html=True)
