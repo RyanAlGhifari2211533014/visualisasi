@@ -50,8 +50,8 @@ with st.sidebar:
     st.title("SIGEMA")
     selected = option_menu(
         menu_title=None, 
-        options=['Home', 'Jumlah Penduduk', 'Jumlah Penduduk (Pendidikan)', 'Jenis Pekerjaan Dominan', 'Jenis Tanah', 'Jumlah Industri UMKM', 'Jumlah KK Menurut RW', 'Jumlah Penduduk (Status Pekerja)', 'Penduduk Disabilitas', 'Penduduk Menurut Jenis Kelamin', 'Sarana dan Prasarana', 'Sarana Kebersihan', 'Tenaga Kerja', 'Peta', 'Admin', 'Infografis', 'Profil Kelurahan'],
-        icons=['house', 'graph-up', 'mortarboard', 'person-workspace', 'map', 'building', 'people', 'person-badge', 'universal-access', 'person-fill-gear', 'hospital', 'trash', 'briefcase', 'gear'],
+        options=['Home', 'Jumlah Penduduk', 'Jumlah Penduduk (Pendidikan)', 'Jenis Pekerjaan Dominan', 'Jenis Tanah', 'Jumlah Industri UMKM', 'Jumlah KK Menurut RW', 'Jumlah Penduduk (Status Pekerja)', 'Penduduk Disabilitas', 'Penduduk Menurut Jenis Kelamin', 'Sarana dan Prasarana', 'Sarana Kebersihan', 'Tenaga Kerja', 'Peta', 'Admin', 'Infografis & Monografi', 'Profil Kelurahan', 'Meta Data'],
+        icons=['house', 'graph-up', 'mortarboard', 'person-workspace', 'map', 'building', 'people', 'person-badge', 'universal-access', 'person-fill-gear', 'hospital', 'trash', 'briefcase', 'geo-alt-fill', 'gear', 'images', 'person-lines-fill'],
         menu_icon="cast",
         default_index=0,
         styles={
@@ -89,13 +89,18 @@ elif selected == 'Peta':
     # Ganti URL ini dengan URL Google Earth Anda yang benar
     PETA_URL = "https://earth.google.com/earth/d/17GwLPOj3Yh1kg8KS_sBaGdHtlp10Dc-k?usp=sharing"
     st.markdown(f'<a href="{PETA_URL}" target="_blank" style="text-decoration: none;"><button style="background-color:#1a73e8;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:16px;">Buka Peta</button></a>', unsafe_allow_html=True)
-elif selected == 'Infografis':
-    st.title("INFOGRAFIS")
-    st.write("Klik tombol di bawah untuk membuka Infografis kelurahan:")
+elif selected == 'Infografis & Monografi':
+    st.title("INFOGRAFIS & MONOGRAFI")
+    st.write("Klik tombol di bawah untuk membuka Infografis dan monografi kelurahan:")
     INFOGRAFIS_URL = "https://kelkubumarapalam.my.canva.site/dagv8o5tcz8"
-    st.markdown(f'<a href="{INFOGRAFIS_URL}" target="_blank" style="text-decoration: none;"><button style="background-color:#1a73e8;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:16px;">Buka Infografis</button></a>', unsafe_allow_html=True)
+    st.markdown(f'<a href="{INFOGRAFIS_URL}" target="_blank" style="text-decoration: none;"><button style="background-color:#1a73e8;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:16px;">Buka Infografis dan monografi</button></a>', unsafe_allow_html=True)
 elif selected == 'Profil Kelurahan':
     st.title("Profil Kelurahan")
     st.write("Klik tombol di bawah untuk membuka Profil kelurahan:")
     PROFIL_URL = "https://drive.google.com/drive/folders/1YXKb_3bCBtjo1fd2KFJBv0cCoQ0UhqzL?usp=drive_link"
     st.markdown(f'<a href="{PROFIL_URL}" target="_blank" style="text-decoration: none;"><button style="background-color:#1a73e8;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:16px;">Buka Profil</button></a>', unsafe_allow_html=True)
+elif selected == 'Meta Data':
+    st.title("Meta Data")
+    st.write("Klik tombol di bawah untuk membuka Meta Data:")
+    META_DATA = "https://drive.google.com/drive/folders/1BpNKGhj0pqWiu0ahK3XLbSGrJh-CRv5u?usp=sharing"
+    st.markdown(f'<a href="{META_DATA}" target="_blank" style="text-decoration: none;"><button style="background-color:#1a73e8;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:16px;">Buka Meta Data</button></a>', unsafe_allow_html=True)
