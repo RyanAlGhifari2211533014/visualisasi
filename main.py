@@ -51,7 +51,7 @@ with st.sidebar:
     selected = option_menu(
         menu_title=None, 
         options=['Home', 'Jumlah Penduduk', 'Jumlah Penduduk (Pendidikan)', 'Jenis Pekerjaan Dominan', 'Jenis Tanah', 'Jumlah Industri UMKM', 'Jumlah KK Menurut RW', 'Jumlah Penduduk (Status Pekerja)', 'Penduduk Disabilitas', 'Penduduk Menurut Jenis Kelamin', 'Sarana dan Prasarana', 'Sarana Kebersihan', 'Tenaga Kerja', 'Peta', 'Admin', 'Infografis & Monografi', 'Profil Kelurahan', 'Meta Data'],
-        icons=['house', 'graph-up', 'mortarboard', 'person-workspace', 'map', 'building', 'people', 'person-badge', 'universal-access', 'person-fill-gear', 'hospital', 'trash', 'briefcase', 'geo-alt-fill', 'gear', 'images', 'person-lines-fill'],
+        icons=['house', 'graph-up', 'mortarboard', 'person-workspace', 'map', 'building', 'people', 'person-badge', 'universal-access', 'person-fill-gear', 'hospital', 'trash', 'briefcase', 'geo-alt-fill', 'gear', 'images', 'person-lines-fill', 'journal-text'],
         menu_icon="cast",
         default_index=0,
         styles={
