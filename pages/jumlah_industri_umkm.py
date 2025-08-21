@@ -101,7 +101,7 @@ def get_umkm_chart():
     return None
 
 def run():
-    st.title("🏭 Jumlah Industri UMKM")
+    st.title("🏭 Jumlah UMKM Menurut Lapangan Usaha")
     df_umkm = load_umkm_data_gsheet()
     if not df_umkm.empty:
         # Pembersihan data (tidak diubah)

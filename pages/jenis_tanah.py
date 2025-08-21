@@ -99,7 +99,7 @@ def run():
     st.title("🗺️ Jenis Tanah")
     df_tanah = load_jenis_tanah_gsheet()
     if not df_tanah.empty:
-        st.subheader("Tabel Rincian Jenis Tanah")
+        st.subheader("Tabel Luas tanah menurut Jenis dan Pemafaatan")
         df_display = df_tanah.drop(columns=['Tanggal', 'Total Luas Tanah (Ha)', 'Luas Desa/Kelurahan (Ha)', 'Status'], errors='ignore')
         st.dataframe(df_display, use_container_width=True, hide_index=True)
         st.markdown("---")

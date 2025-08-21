@@ -93,7 +93,7 @@ def get_status_pekerja_chart():
     return None
 
 def run():
-    st.title("👨‍💼 Jumlah Penduduk (Status Pekerja)")
+    st.title("👨‍💼 Jumlah Penduduk Menurut Status Bekerja")
     df_status_pekerja = load_status_pekerja_data_gsheet()
     if not df_status_pekerja.empty:
         st.subheader("Tabel Rincian Status Pekerja")
