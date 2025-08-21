@@ -82,7 +82,7 @@ def load_penduduk_2020_from_gsheet():
     Memuat dan memproses data jumlah penduduk dari Google Sheet.
 
     Worksheet yang digunakan: 'Jumlah Penduduk'
-    Wajib memiliki kolom: 'Tahun', 'Jumlah Laki-Laki (orang)', 'Jumlah Perempuan (orang)', 'Jumlah Total (orang)', 'Jumlah Kepala Keluarga (KK)'
+    Wajib memiliki kolom: 'Tahun', 'Jumlah Laki-Laki (orang)', 'Jumlah Perempuan (orang)', 'Jumlah Total (orang)'
     """
     df = load_data_from_gsheets(WORKSHEET_NAME_PENDUDUK)
     if not df.empty:

@@ -97,7 +97,7 @@ def run():
         st.subheader("Data Jumlah Penduduk")
         st.dataframe(df_penduduk, use_container_width=True, hide_index=True)
         st.markdown("---")
-        st.subheader("Tren Jumlah Penduduk dari Tahun ke Tahun")
+        st.subheader("Tren Jumlah Penduduk dari Tahun 2023 ke Tahun 2025")
         chart_obj = get_penduduk_tahun_chart()
         if chart_obj:
             st.altair_chart(chart_obj, use_container_width=True)
