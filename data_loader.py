@@ -92,8 +92,7 @@ def load_penduduk_2020_from_gsheet():
             'Tahun',
             'Jumlah Laki-Laki (orang)',
             'Jumlah Perempuan (orang)',
-            'Jumlah Total (orang)',
-            'Jumlah Kepala Keluarga (KK)'
+            'Jumlah Total (orang)'
         ]
         if not all(col in df.columns for col in required_columns):
             missing_cols = [col for col in required_columns if col not in df.columns]
@@ -103,7 +102,7 @@ def load_penduduk_2020_from_gsheet():
             return pd.DataFrame()
 
         # Konversi kolom numerik
-        for col in ['Jumlah Laki-Laki (orang)', 'Jumlah Perempuan (orang)', 'Jumlah Total (orang)', 'Jumlah Kepala Keluarga (KK)']:
+        for col in ['Jumlah Laki-Laki (orang)', 'Jumlah Perempuan (orang)', 'Jumlah Total (orang)']:
             df[col] = pd.to_numeric(df[col], errors='coerce')
         
         df.dropna(subset=['Jumlah Total (orang)'], inplace=True) # Hapus baris dengan NaN di kolom kunci

@@ -74,7 +74,7 @@ def run():
     
     # --- Grafik Perkembangan Penduduk ---
     with st.container(border=True):
-        st.subheader("📈 Perkembangan Penduduk")
+        st.subheader("📈 Trend Jumlah Penduduk Tahun 2023-2025")
         chart_penduduk_tahun = get_penduduk_tahun_chart()
         if chart_penduduk_tahun:
              st.altair_chart(chart_penduduk_tahun, use_container_width=True)

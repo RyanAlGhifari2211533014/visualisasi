@@ -22,7 +22,7 @@ def df_to_pdf(df):
     df_for_pdf = df.copy()
     df_for_pdf.insert(0, 'No', range(1, 1 + len(df_for_pdf)))
     headers = df_for_pdf.columns.tolist()
-    col_widths = {'No': 15, 'Tahun': 25, 'Jumlah Laki-Laki (orang)': 35, 'Jumlah Perempuan (orang)': 35, 'Jumlah Total (orang)': 35, 'Jumlah Kepala Keluarga (KK)': 40}
+    col_widths = {'No': 15, 'Tahun': 25, 'Jumlah Laki-Laki (orang)': 35, 'Jumlah Perempuan (orang)': 35, 'Jumlah Total (orang)': 35}
     default_col_width = (pdf.w - 2 * pdf.l_margin - sum(col_widths.values())) / (len(headers) - len(col_widths)) if (len(headers) - len(col_widths)) > 0 else 30
     if len(headers) > 0:
         y_start_headers = pdf.get_y()
