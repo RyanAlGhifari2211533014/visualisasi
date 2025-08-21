@@ -113,7 +113,7 @@ def run():
         if 'No.' in df_umkm.columns:
             df_umkm['No.'] = pd.to_numeric(df_umkm['No.'], errors='coerce').apply(lambda x: int(x) if pd.notna(x) else None)
         
-        st.subheader("Tabel Rincian Industri UMKM")
+        st.subheader("Tabel Jumlah UMKM Menurut Lapangan Usaha")
         df_display = df_umkm.copy()
         if 'Jumlah' in df_display.columns:
             total_jumlah = df_display['Jumlah'].sum()
@@ -125,7 +125,7 @@ def run():
         st.dataframe(df_display, use_container_width=True, hide_index=True)
         st.markdown("---")
         
-        st.subheader("Grafik Jumlah Unit Usaha per Jenis Industri UMKM")
+        st.subheader("Grafik Jumlah UMKM Menurut Lapangan Usaha")
         chart_obj = get_umkm_chart()
         if chart_obj:
             st.altair_chart(chart_obj, use_container_width=True)

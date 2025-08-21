@@ -104,7 +104,7 @@ def run():
         st.dataframe(df_display, use_container_width=True, hide_index=True)
         st.markdown("---")
 
-        st.subheader("Grafik Perbandingan Luas Berbagai Jenis Tanah")
+        st.subheader("Grafik Luas tanah menurut Jenis dan Pemafaatan")
         chart_obj = get_jenis_tanah_chart()
         if chart_obj:
             st.altair_chart(chart_obj, use_container_width=True)

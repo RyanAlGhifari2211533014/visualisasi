@@ -96,12 +96,12 @@ def run():
     st.title("👨‍💼 Jumlah Penduduk Menurut Status Bekerja")
     df_status_pekerja = load_status_pekerja_data_gsheet()
     if not df_status_pekerja.empty:
-        st.subheader("Tabel Rincian Status Pekerja")
+        st.subheader("Tabel Jumlah Penduduk Menurut Status Bekerja")
         df_display = df_status_pekerja.drop(columns=['No.'], errors='ignore')
         st.dataframe(df_display, use_container_width=True, hide_index=True)
         st.markdown("---")
 
-        st.subheader("Grafik Proporsi Penduduk Berdasarkan Status Pekerjaan")
+        st.subheader("Grafik Jumlah Penduduk Menurut Status Bekerja")
         chart_obj = get_status_pekerja_chart()
         if chart_obj:
             st.altair_chart(chart_obj, use_container_width=True)
