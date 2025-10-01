@@ -77,7 +77,7 @@ elif selected == 'Penduduk Menurut Jenis Kelamin': penduduk_menurut_jenis_kelami
 elif selected == 'Sarana dan Prasarana': sarana_dan_prasarana.run()
 elif selected == 'Sarana Kebersihan': sarana_kebersihan.run()
 elif selected == 'Tenaga Kerja': tenaga_kerja.run()
-elif selected == 'Klastering': Kelastering.run() 
+elif selected == 'Klastering': Kelastering.run()
 elif selected == 'Admin':
     st.title("🔑 Akses Admin")
     st.write("Klik tombol di bawah untuk membuka dan mengedit database di Google Sheets:")
