@@ -45,7 +45,7 @@ def run():
         # Tandai bahwa proses muat awal sudah selesai
         st.session_state['init_load_complete'] = True
 
-    st.title("⚙️ Halaman Proses Klastering")
+    st.title("Clustering RW Kel Kubu Marapalam")
     st.header("1. Input dan Preprocessing Data")
     st.info(
            """
