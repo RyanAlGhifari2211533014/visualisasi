@@ -41,12 +41,12 @@ def run():
         if not df_demografi_terakhir.empty:
             st.session_state['hasil_akhir_demografi'] = df_demografi_terakhir
         
-        st.toast("Data & hasil analisis terakhir berhasil dimuat.", icon="")
+        st.toast("Data & hasil analisis terakhir berhasil dimuat.", icon="✅")
         # Tandai bahwa proses muat awal sudah selesai
         st.session_state['init_load_complete'] = True
 
-    st.title("Halaman Proses Klastering")
-    st.header("1. Input dan Bersihkan Data")
+    st.title("⚙️ Halaman Proses Klastering")
+    st.header("1. Input dan Preprocessing Data")
     st.info(
            """
     Memasukan Data Baru
@@ -63,11 +63,11 @@ def run():
     
     Langkah 6 : Tekan Tombol preprocessing data untuk memulai
     
-    Langkah 7 : Setelah preprocessing selesai tekan tombol Jalankan Analisis di bawah table Analisis Kepadatan atau Analisis Demografi
+    Langkah 7 : Setelah preprocessing selesai tekan tombol Jalankan Kelastering di bawah table
     
-    Langkah 8 : Hasil kelastering akan muncul di dalam table
+    Langkah 8 : Hasil kelastering akan muncul
     
-    Langkah 9 : Lihat menu paling bawah di table hasil tiap kalstering pilih simpan data ke Google sheet
+    Langkah 9 : Lihat menu paling bawah pilih simpan data ke Google sheet
     
     Langkah 10 : Setelah selsai mengikuti, Anda sudah berhasil melakukan Clustering data
     
@@ -87,7 +87,7 @@ def run():
         )
 
     with col2:
-        if st.button("Preprocessing Data", type="secondary", use_container_width=True):
+        if st.button("Bersihkan Data", type="secondary", use_container_width=True):
             with st.spinner("Mohon tunggu... Melakukan preprocessing..."):
                 df_mentah = load_data_from_gsheets(WORKSHEET_MENTAH)
                 if not df_mentah.empty:
@@ -117,8 +117,8 @@ def run():
         st.write("Data bersih yang siap untuk dianalisis:")
         st.dataframe(st.session_state['data_bersih'])
 
-        if st.button("Jalankan Klastering Kepadatan", type="primary"):
-            with st.spinner("Menjalankan algoritma Klastering Kepadatan penduduk..."):
+        if st.button("Jalankan Analisis", type="primary"):
+            with st.spinner("Menjalankan algoritma Klastering Kepadatan..."):
                 df_bersih = st.session_state['data_bersih']
                 numeric_cols = df_bersih.select_dtypes(include=['number']).columns.tolist()
                 
@@ -144,7 +144,7 @@ def run():
                     st.session_state['hasil_akhir_kepadatan'] = df_hasil
 
     if 'hasil_akhir_kepadatan' in st.session_state:
-        st.header("3. Hasil Kalstering Kepadatan Penduduk")
+        st.header("3. Hasil Akhir Klastering Kepadatan")
         df_final_kepadatan = st.session_state['hasil_akhir_kepadatan']
         
         if 'rw' in df_final_kepadatan.columns:
@@ -168,7 +168,7 @@ def run():
 
         st.markdown("---")
         
-        st.header("Analisis Klastering Demografi dan Prencanaan Sosial")
+        st.header("4. Analisis Klastering Demografi & Perencanaan Sosial")
         if st.button("Jalankan Analisis"):
             with st.spinner("Menjalankan Analisis Demografi..."):
                 df_bersih = st.session_state['data_bersih']
@@ -191,11 +191,11 @@ def run():
                     
                     df_demografi['Label_Demografi'] = df_demografi['Klaster_Demografi'].map(label_mapping_demo)
                     
-                    st.success("Analisis Selesai!")
+                    st.success("✅Analisis Selesai!")
                     st.session_state['hasil_akhir_demografi'] = df_demografi
 
     if 'hasil_akhir_demografi' in st.session_state:
-        st.subheader("Hasil Analisis")
+        st.subheader("Hasil Analisis Demografi")
         df_final_demografi = st.session_state['hasil_akhir_demografi']
         
         kolom_tampil = ['rw', 'Label_Demografi', 'rata2_anggota_keluarga', 'total_penduduk', 'jumlah_kk']
@@ -210,4 +210,4 @@ def run():
                     st.success(f"Hasil berhasil disimpan di worksheet '{WORKSHEET_HASIL_Demografi}'!")
         with col4:
             excel_data_demo = to_excel(df_final_demografi)
-            st.download_button(label=" Download Hasil Demografi", data=excel_data_demo, file_name="hasil_demografi.xlsx", use_container_width=True)
+            st.download_button(label="Download Hasil Demografi", data=excel_data_demo, file_name="hasil_demografi.xlsx", use_container_width=True)
